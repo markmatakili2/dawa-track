@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dawa Track — Facility Workspace</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #f5f6f2;
+            --surface: #ffffff;
+            --ink: #15233a;
+            --muted: #5c6773;
+            --line: #e1e4dd;
+            --teal: #146b64;
+            --teal-dark: #0e4f49;
+            --teal-tint: #e6f1ef;
+            --amber: #c98a1f;
+            --amber-tint: #fbf0dd;
+            --red: #b23b2e;
+            --red-tint: #f9e7e3;
+            --green: #2e7d52;
+            --green-tint: #e6f2ea;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .eyebrow {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .wordmark {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--ink);
+            letter-spacing: -0.01em;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .brand .tagline {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .facility-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .facility-pill {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--ink);
+            background: var(--teal-tint);
+            border: 1px solid var(--teal);
+            border-radius: 999px;
+            padding: 7px 14px;
+        }
+
+        .logout-btn {
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--red);
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--red);
+            background: var(--red-tint);
+        }
+
+        .shell {
+            display: flex;
+            min-height: calc(100vh - 65px);
+        }
+
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--line);
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 11px 22px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            color: var(--ink);
+            background: #fafaf8;
+        }
+
+        .nav-item.active {
+            color: var(--teal-dark);
+            font-weight: 600;
+            border-left: 3px solid var(--teal);
+            background: var(--teal-tint);
+        }
+
+        .main {
+            flex: 1;
+            padding: 26px 32px 60px;
+            max-width: 980px;
+        }
+
+        h1.page-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 19px;
+            margin: 0 0 4px;
+        }
+
+        .page-sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 0 0 22px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            margin-bottom: 12px;
+        }
+
+        .batch-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .batch-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .batch-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .batch-meta {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .batch-meta span.mono {
+            color: var(--muted);
+        }
+
+        .batch-facility {
+            font-size: 11.5px;
+            color: var(--teal-dark);
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .runway {
+            width: 170px;
+            flex-shrink: 0;
+        }
+
+        .runway-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 5px;
+            color: var(--muted);
+        }
+
+        .runway-label b {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        .runway-track {
+            height: 7px;
+            border-radius: 99px;
+            background: #eceee9;
+            overflow: hidden;
+        }
+
+        .runway-fill {
+            height: 100%;
+            border-radius: 99px;
+        }
+
+        .runway-fill.green {
+            background: var(--green);
+        }
+
+        .runway-fill.amber {
+            background: var(--amber);
+        }
+
+        .runway-fill.red {
+            background: var(--red);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .badge.green {
+            background: var(--green-tint);
+            color: var(--green);
+        }
+
+        .badge.amber {
+            background: var(--amber-tint);
+            color: var(--amber);
+        }
+
+        .badge.red {
+            background: var(--red-tint);
+            color: var(--red);
+        }
+
+        .badge.gray {
+            background: #eeefec;
+            color: var(--muted);
+        }
+
+        .badge.teal {
+            background: var(--teal-tint);
+            color: var(--teal-dark);
+        }
+
+        button {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 12.5px;
+            border: none;
+            border-radius: 7px;
+            padding: 8px 14px;
+            cursor: pointer;
+        }
+
+        button.primary {
+            background: var(--teal);
+            color: #fff;
+        }
+
+        button.primary:hover {
+            background: var(--teal-dark);
+        }
+
+        button.ghost {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid var(--line);
+        }
+
+        button.ghost:hover {
+            border-color: var(--red);
+        }
+
+        button:disabled {
+            background: #eeefec;
+            color: #a9afa6;
+            cursor: not-allowed;
+        }
+
+        input[type=number],
+        input[type=text],
+        input[type=date],
+        select.form-input {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: #fcfcfb;
+        }
+
+        label.field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11.5px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .excluded-note {
+            font-size: 11.5px;
+            color: var(--red);
+            background: var(--red-tint);
+            padding: 6px 10px;
+            border-radius: 7px;
+            margin-top: 8px;
+        }
+
+        .request-inline {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .empty {
+            color: var(--muted);
+            font-size: 13px;
+            padding: 24px 0;
+            text-align: center;
+        }
+
+        .add-batch-form {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .add-batch-form label.field {
+            grid-column: span 1;
+        }
+
+        .checks {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+            grid-column: span 4;
+        }
+
+        .checks label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            margin: 22px 0 10px;
+            color: var(--ink);
+        }
+
+        .audit-row {
+            display: flex;
+            gap: 14px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 12.5px;
+        }
+
+        .audit-time {
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            width: 110px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 900px) {
+            .shell {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .nav-item {
+                flex: 1 1 140px;
+            }
+
+            .main {
+                padding: 20px 18px 40px;
+            }
+
+            .add-batch-form {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .checks {
+                grid-column: span 2;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <span class="wordmark">Dawa Track</span>
+            <span class="tagline">— facility-to-facility surplus medicine coordination</span>
+        </div>
+        <div class="facility-switch">
+            Signed in as pharmacist-in-charge at
+            <span class="facility-pill">Nairobi Hospital</span>
+            <button class="logout-btn" onclick="window.location.href='login.html'">Log out</button>
+        </div>
+    </div>
+
+    <div class="shell">
+        <div class="sidebar" id="sidebar"></div>
+        <div class="main" id="main"></div>
+    </div>
+
+    <script>
+        const TODAY = new Date(2026, 6, 12);
+
+        const facilities = [
+            { id: 'nai', name: 'Nairobi Hospital', county: 'Nairobi' },
+        ];
+
+        let batches = [
+            { id: 'b1', facilityId: 'nai', drug: 'Amoxicillin', form: 'Capsules', strength: '500mg', qty: 4000, batchNo: 'AMX-2405-11', expiry: '2026-08-20', storage: 'ambient', controlled: false },
+            { id: 'b2', facilityId: 'nai', drug: 'Ceftriaxone', form: 'Injection vial', strength: '1g', qty: 1200, batchNo: 'CFX-2405-03', expiry: '2026-09-05', storage: 'ambient', controlled: false },
+            { id: 'b3', facilityId: 'nai', drug: 'Insulin Soluble', form: 'Vial', strength: '100IU/ml', qty: 600, batchNo: 'INS-2403-07', expiry: '2026-08-01', storage: 'cold-chain', controlled: false },
+            { id: 'b4', facilityId: 'nai', drug: 'Diazepam', form: 'Injection', strength: '10mg/2ml', qty: 300, batchNo: 'DZP-2404-02', expiry: '2026-10-15', storage: 'ambient', controlled: true },
+        ];
+
+        let transfers = [];
+        let auditLog = [];
+        let transferSeq = 1;
+        let currentFacility = 'nai';
+        let activeTab = 'inventory';
+
+        function fName(id) { return facilities.find(f => f.id === id).name; }
+        function daysLeft(dateStr) { return Math.ceil((new Date(dateStr) - TODAY) / 86400000); }
+        function fmtDate(dateStr) { return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+        function nowStamp() { return TODAY.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+
+        function log(event, detail) {
+            auditLog.unshift({ ts: nowStamp(), event, detail });
+        }
+
+        function runwayBar(dateStr) {
+            const d = daysLeft(dateStr);
+            const pct = Math.max(3, Math.min(100, (d / 180) * 100));
+            const cls = d <= 30 ? 'red' : d <= 90 ? 'amber' : 'green';
+            const text = d <= 0 ? 'Expired' : d + 'd to expiry';
+            return `<div class="runway">
+        <div class="runway-label"><span>${text}</span><b>${fmtDate(dateStr)}</b></div>
+        <div class="runway-track"><div class="runway-fill ${cls}" style="width:${pct}%"></div></div>
+      </div>`;
+        }
+
+        function statusBadge(status) {
+            const map = {
+                requested: ['amber', 'Awaiting approval'],
+                approved: ['teal', 'Approved — in transit'],
+                completed: ['green', 'Completed'],
+                declined: ['red', 'Declined'],
+            };
+            const [cls, label] = map[status];
+            return `<span class="badge ${cls}">${label}</span>`;
+        }
+
+        function render() {
+            const tabs = [
+                ['inventory', 'My Inventory'],
+                ['opportunities', 'Network Opportunities'],
+                ['transfers', 'Transfers'],
+                ['audit', 'Audit Log'],
+            ];
+            document.getElementById('sidebar').innerHTML = tabs.map(([id, label]) =>
+                `<div class="nav-item ${activeTab === id ? 'active' : ''}" onclick="setTab('${id}')">${label}</div>`
+            ).join('');
+
+            const main = document.getElementById('main');
+            if (activeTab === 'inventory') main.innerHTML = renderInventory();
+            else if (activeTab === 'opportunities') main.innerHTML = renderOpportunities();
+            else if (activeTab === 'transfers') main.innerHTML = renderTransfers();
+            else main.innerHTML = renderAudit();
+        }
+
+        function renderInventory() {
+            const mine = batches.filter(b => b.facilityId === currentFacility);
+            const rows = mine.map(b => `
+        <div class="card batch-row">
+          <div class="batch-main">
+            <div class="batch-title">${b.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${b.strength}</span></div>
+            <div class="batch-meta">${b.form} · qty <span class="mono">${b.qty.toLocaleString()}</span> · batch <span class="mono">${b.batchNo}</span></div>
+            ${b.controlled ? '<span class="badge red" style="margin-top:6px;display:inline-block">Controlled substance</span>' : ''}
+            ${b.storage === 'cold-chain' ? '<span class="badge gray" style="margin-top:6px;display:inline-block">Cold-chain</span>' : ''}
+          </div>
+          ${runwayBar(b.expiry)}
+        </div>
+      `).join('') || '<div class="empty">No stock recorded yet for this facility.</div>';
+
+            return `
+        <h1 class="page-title">My Inventory</h1>
+        <p class="page-sub">${fName(currentFacility)} — record surplus or short-dated stock here. Only your facility can see or edit this list.</p>
+
+        <div class="section-label">Add a batch</div>
+        <div class="card">
+          <div class="add-batch-form">
+            <label class="field">Drug name <input type="text" id="nb-drug" placeholder="e.g. Amoxicillin"></label>
+            <label class="field">Form <input type="text" id="nb-form" placeholder="Capsules / Vial"></label>
+            <label class="field">Strength <input type="text" id="nb-strength" placeholder="500mg"></label>
+            <label class="field">Quantity <input type="number" id="nb-qty" min="1"></label>
+            <label class="field">Batch no. <input type="text" id="nb-batch" placeholder="AMX-2601-01"></label>
+            <label class="field">Expiry date <input type="date" id="nb-expiry"></label>
+            <label class="field">Storage
+              <select class="form-input" id="nb-storage">
+                <option value="ambient">Ambient</option>
+                <option value="cold-chain">Cold-chain (2–8°C)</option>
+              </select>
+            </label>
+            <div></div>
+            <div class="checks">
+              <label><input type="checkbox" id="nb-controlled"> Controlled substance</label>
+            </div>
+          </div>
+          <button class="primary" onclick="addBatch()">Add to inventory</button>
+        </div>
+
+        <div class="section-label">Current stock</div>
+        ${rows}
+      `;
+        }
+
+        function eligibility(b) {
+            if (b.controlled) return 'Controlled substance — excluded pending separate chain-of-custody approval under the Pharmacy and Poisons Act.';
+            if (b.storage === 'cold-chain') return 'Cold-chain item — excluded until in-transit temperature verification is supported.';
+            return null;
+        }
+
+        function renderOpportunities() {
+            const others = batches
+                .filter(b => b.facilityId !== currentFacility && b.qty > 0)
+                .filter(b => daysLeft(b.expiry) <= 120)
+                .sort((a, b) => daysLeft(a.expiry) - daysLeft(b.expiry));
+
+            const cards = others.map(b => {
+                const reason = eligibility(b);
+                return `
+          <div class="card">
+            <div class="batch-row">
+              <div class="batch-main">
+                <div class="batch-title">${b.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${b.strength}</span></div>
+                <div class="batch-meta">${b.form} · available <span class="mono">${b.qty.toLocaleString()}</span> · batch <span class="mono">${b.batchNo}</span></div>
+                <div class="batch-facility">Held at ${fName(b.facilityId)}</div>
+              </div>
+              ${runwayBar(b.expiry)}
+            </div>
+            ${reason
+                        ? `<div class="excluded-note">${reason}</div>`
+                        : `<div class="request-inline">
+                   <label class="field">Qty needed
+                     <input type="number" id="req-${b.id}" min="1" max="${b.qty}" value="${Math.min(b.qty, 100)}" style="width:100px">
+                   </label>
+                   <button class="primary" onclick="requestTransfer('${b.id}')">Request transfer</button>
+                 </div>`
+                    }
+          </div>`;
+            }).join('') || '<div class="empty">No near-expiry stock currently listed elsewhere in the network.</div>';
+
+            return `
+        <h1 class="page-title">Network Opportunities</h1>
+        <p class="page-sub">Short-dated surplus visible across other facilities in the network, nearest expiry first. Requesting notifies the holding facility's pharmacist — nothing is reserved automatically.</p>
+        ${cards}
+      `;
+        }
+
+        function requestTransfer(batchId) {
+            const b = batches.find(x => x.id === batchId);
+            const qtyInput = document.getElementById('req-' + batchId);
+            const qty = Math.max(1, Math.min(b.qty, parseInt(qtyInput.value || '0', 10)));
+            const t = {
+                id: 'T' + String(transferSeq++).padStart(3, '0'),
+                batchId,
+                fromFacility: b.facilityId,
+                toFacility: currentFacility,
+                qty,
+                status: 'requested',
+                requestedAt: nowStamp(),
+            };
+            transfers.unshift(t);
+            log('Transfer requested', `${t.id}: ${fName(currentFacility)} requested ${qty} × ${b.drug} (${b.batchNo}) from ${fName(b.facilityId)}`);
+            activeTab = 'transfers';
+            render();
+        }
+
+        function approveTransfer(id) {
+            const t = transfers.find(x => x.id === id);
+            const b = batches.find(x => x.id === t.batchId);
+            if (t.qty > b.qty) { t.qty = b.qty; }
+            b.qty -= t.qty;
+            t.status = 'approved';
+            t.approvedAt = nowStamp();
+            log('Transfer approved & dispatched', `${t.id}: ${fName(t.fromFacility)} released ${t.qty} × ${b.drug} (${b.batchNo}) to ${fName(t.toFacility)}`);
+            render();
+        }
+
+        function declineTransfer(id) {
+            const t = transfers.find(x => x.id === id);
+            const b = batches.find(x => x.id === t.batchId);
+            t.status = 'declined';
+            log('Transfer declined', `${t.id}: ${fName(t.fromFacility)} declined request from ${fName(t.toFacility)} for ${b.drug} (${b.batchNo})`);
+            render();
+        }
+
+        function confirmReceipt(id) {
+            const t = transfers.find(x => x.id === id);
+            const b = batches.find(x => x.id === t.batchId);
+            t.status = 'completed';
+            t.completedAt = nowStamp();
+            log('Receipt confirmed', `${t.id}: ${fName(t.toFacility)} confirmed receipt of ${t.qty} × ${b.drug} (${b.batchNo})`);
+            render();
+        }
+
+        function renderTransfers() {
+            const outgoing = transfers.filter(t => t.toFacility === currentFacility);
+            const incoming = transfers.filter(t => t.fromFacility === currentFacility);
+
+            function card(t, role) {
+                const b = batches.find(x => x.id === t.batchId);
+                let action = '';
+                if (role === 'incoming' && t.status === 'requested') {
+                    action = `<div class="request-inline">
+            <button class="primary" onclick="approveTransfer('${t.id}')">Approve &amp; dispatch</button>
+            <button class="ghost" onclick="declineTransfer('${t.id}')">Decline</button>
+          </div>`;
+                } else if (role === 'outgoing' && t.status === 'approved') {
+                    action = `<div class="request-inline"><button class="primary" onclick="confirmReceipt('${t.id}')">Confirm receipt</button></div>`;
+                } else if (role === 'incoming' && t.status === 'approved') {
+                    action = `<div class="excluded-note" style="color:var(--muted);background:#f1f2ee;">Awaiting receipt confirmation from ${fName(t.toFacility)}</div>`;
+                } else if (role === 'outgoing' && t.status === 'requested') {
+                    action = `<div class="excluded-note" style="color:var(--muted);background:#f1f2ee;">Awaiting approval from ${fName(t.fromFacility)}</div>`;
+                }
+
+                return `
+          <div class="card">
+            <div class="batch-row">
+              <div class="batch-main">
+                <div class="batch-title">${t.id} · ${b.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${b.strength}</span></div>
+                <div class="batch-meta">qty <span class="mono">${t.qty.toLocaleString()}</span> · batch <span class="mono">${b.batchNo}</span> · ${fName(t.fromFacility)} → ${fName(t.toFacility)}</div>
+              </div>
+              ${statusBadge(t.status)}
+            </div>
+            ${action}
+          </div>`;
+            }
+
+            return `
+        <h1 class="page-title">Transfers</h1>
+        <p class="page-sub">Every transfer needs a release confirmation from the source facility and a receipt confirmation from the receiving facility before it's logged as complete.</p>
+        <div class="section-label">Requests I've made (${outgoing.length})</div>
+        ${outgoing.map(t => card(t, 'outgoing')).join('') || '<div class="empty">No outgoing requests yet.</div>'}
+        <div class="section-label">Requests from other facilities (${incoming.length})</div>
+        ${incoming.map(t => card(t, 'incoming')).join('') || '<div class="empty">No incoming requests yet.</div>'}
+      `;
+        }
+
+        function renderAudit() {
+            const rows = auditLog.map(a => `
+        <div class="audit-row">
+          <div class="audit-time">${a.ts}</div>
+          <div><b>${a.event}</b><br><span style="color:var(--muted)">${a.detail}</span></div>
+        </div>
+      `).join('') || '<div class="empty">No activity yet.</div>';
+
+            return `
+        <h1 class="page-title">Audit Log</h1>
+        <p class="page-sub">Full network trail — every request, approval, decline and receipt is timestamped for compliance and grant reporting.</p>
+        <div class="card">${rows}</div>
+      `;
+        }
+
+        function addBatch() {
+            const drug = document.getElementById('nb-drug').value.trim();
+            const form = document.getElementById('nb-form').value.trim();
+            const strength = document.getElementById('nb-strength').value.trim() || '—';
+            const qty = parseInt(document.getElementById('nb-qty').value || '0', 10);
+            const batchNo = document.getElementById('nb-batch').value.trim();
+            const expiry = document.getElementById('nb-expiry').value;
+            const storage = document.getElementById('nb-storage').value;
+            const controlled = document.getElementById('nb-controlled').checked;
+            if (!drug || !qty || !batchNo || !expiry) { alert('Please fill in drug name, quantity, batch number and expiry date.'); return; }
+            const id = 'b' + (batches.length + 1);
+            batches.push({ id, facilityId: currentFacility, drug, form, strength, qty, batchNo, expiry, storage, controlled });
+            log('Batch added', `${fName(currentFacility)} logged ${qty} × ${drug} (${batchNo}), expiring ${fmtDate(expiry)}`);
+            render();
+        }
+
+        function setFacility(id) { currentFacility = id; render(); }
+        function setTab(id) { activeTab = id; render(); }
+
+        render();
+    </script>
+</body>
+
+</html>

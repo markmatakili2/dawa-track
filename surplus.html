@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>List Your Surplus Stock | Dawa Track</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="navbar">
+            <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="browse.html">Browse medicine</a>
+                <a class="active" href="surplus.html">Surplus stock</a>
+                <a href="login.html">Login</a>
+            </div>
+            <a href="login.html" class="btn btn-outline">Log in</a>
+        </nav>
+    </header>
+
+    <main class="page">
+        <section class="hero-card">
+            <h1>List your surplus stock</h1>
+            <p>Share stock you cannot use in time so another facility can receive it before expiry.</p>
+        </section>
+
+        <section class="form-card">
+            <h2 class="section-title">Submit a surplus listing</h2>
+            <p class="section-subtitle">Fields marked with * are required.</p>
+            <form class="form-grid">
+                <label>
+                    Medicine name *
+                    <input type="text" placeholder="e.g. Amoxicillin 500mg" />
+                </label>
+                <label>
+                    Quantity available *
+                    <input type="number" placeholder="4000" />
+                </label>
+                <label>
+                    Facility name *
+                    <input type="text" placeholder="Your hospital or warehouse" />
+                </label>
+                <label>
+                    Expiry date *
+                    <input type="date" />
+                </label>
+                <label>
+                    Storage condition
+                    <select>
+                        <option>Ambient</option>
+                        <option>Cold chain</option>
+                        <option>Controlled</option>
+                    </select>
+                </label>
+                <label>
+                    Contact person
+                    <input type="text" placeholder="Pharmacy lead" />
+                </label>
+                <label>
+                    Phone number *
+                    <input type="tel" placeholder="0712345678" />
+                </label>
+                <label>
+                    Email address *
+                    <input type="email" placeholder="contact@facility.org" />
+                </label>
+                <label>
+                    Location address *
+                    <input type="text" placeholder="Ward, street or delivery point" />
+                </label>
+                <label style="grid-column: 1 / -1;">
+                    Notes
+                    <textarea
+                        placeholder="Share batch details, transport needs or special handling instructions."></textarea>
+                </label>
+                <div class="form-actions" style="grid-column: 1 / -1;">
+                    <button type="submit" class="btn btn-primary">Submit listing</button>
+                    <a href="browse.html" class="btn btn-outline">View available medicine</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <strong>Dawa Track</strong>
+                <p>Use the network to keep medicines moving and reduce waste.</p>
+            </div>
+            <div>
+                <a href="browse.html">Browse medicine</a><br />
+                <a href="surplus.html">List surplus stock</a><br />
+                <a href="login.html">Facility login</a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
