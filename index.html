@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dawa Track — Before Expiry, Not After</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#F6F7F4; --surface:#FFFFFF; --ink:#122031; --muted:#5B6673; --line:#E3E6DF;
+  --teal:#0F7A6E; --teal-dark:#0B5C53; --teal-tint:#E4F3F0;
+  --amber:#C98A1F; --amber-tint:#FBF0DD;
+  --red:#B23B2E; --red-tint:#F9E7E3;
+  --green:#2E7D52; --green-tint:#E6F2EA;
+  --navy:#0B2545;
+  --radius:12px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:14.5px;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.eyebrow{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-dark);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px;}
+
+/* ---------- nav ---------- */
+.nav{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;max-width:1120px;margin:0 auto;}
+.logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;gap:8px;}
+.logo .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);display:inline-block;}
+.nav-links{display:flex;gap:26px;font-weight:600;font-size:13.5px;color:var(--muted);}
+.nav-links a.active,.nav-links a:hover{color:var(--ink);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.btn{font-family:'Inter',sans-serif;font-weight:600;font-size:13px;border-radius:8px;padding:9px 16px;cursor:pointer;border:1px solid transparent;display:inline-block;}
+.btn.primary{background:var(--teal);color:#fff;}
+.btn.primary:hover{background:var(--teal-dark);}
+.btn.outline{background:transparent;border-color:var(--line);color:var(--ink);}
+.btn.outline:hover{border-color:var(--teal);color:var(--teal-dark);}
+.btn.ghost{background:transparent;color:var(--muted);font-size:12.5px;padding:9px 8px;}
+.btn.ghost:hover{color:var(--ink);}
+.btn.small{padding:6px 12px;font-size:12px;}
+.btn:disabled{background:#EEEFEC;color:#A9AFA6;cursor:not-allowed;border-color:#EEEFEC;}
+
+/* ---------- hero ---------- */
+.hero{background:linear-gradient(180deg,#0E3B34 0%,var(--navy) 100%);color:#fff;padding:56px 0 64px;}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;}
+.hero h1{font-size:38px;line-height:1.15;margin-bottom:14px;}
+.hero p.lead{color:#CFE0DC;font-size:15.5px;max-width:480px;margin-bottom:24px;}
+.hero .cta-row{display:flex;gap:12px;}
+.hero .btn.outline{border-color:rgba(255,255,255,.35);color:#fff;}
+.hero .btn.outline:hover{border-color:#fff;}
+
+.urgent-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:var(--radius);padding:20px 22px;backdrop-filter:blur(3px);}
+.urgent-card .eyebrow{color:#9FD8CC;}
+.urgent-card .drug{font-size:19px;font-weight:700;margin:8px 0 2px;font-family:'Space Grotesk',sans-serif;}
+.urgent-card .meta{color:#B9C9C4;font-size:12.5px;margin-bottom:14px;}
+.cd-big{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:600;letter-spacing:.01em;}
+.cd-big.urgent{color:#F3B0A3;}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;margin-right:7px;animation:pulse 1.6s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(178,59,46,.55);}70%{box-shadow:0 0 0 9px rgba(178,59,46,0);}100%{box-shadow:0 0 0 0 rgba(178,59,46,0);}}
+
+.stats-strip{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.15);margin-top:34px;padding-top:22px;}
+.stat{flex:1;}
+.stat b{font-family:'Space Grotesk',sans-serif;font-size:22px;display:block;}
+.stat span{color:#B9C9C4;font-size:12px;}
+
+/* ---------- sections ---------- */
+section{padding:52px 0;}
+.section-head{margin-bottom:26px;}
+.section-head h2{font-size:24px;margin-bottom:6px;}
+.section-head p{color:var(--muted);font-size:13.5px;max-width:560px;}
+
+/* listings table */
+.table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:13px 16px;border-bottom:1px solid var(--line);background:#FAFBF9;}
+td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px;}
+tr:last-child td{border-bottom:none;}
+.drug-name{font-weight:600;}
+.drug-sub{color:var(--muted);font-size:12px;margin-top:2px;}
+.held-at{font-size:12.5px;}
+.held-at .county{color:var(--muted);font-size:11.5px;}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;}
+.badge.green{background:var(--green-tint);color:var(--green);}
+.badge.amber{background:var(--amber-tint);color:var(--amber);}
+.badge.red{background:var(--red-tint);color:var(--red);}
+.badge.gray{background:#EEEFEC;color:var(--muted);}
+.badge.teal{background:var(--teal-tint);color:var(--teal-dark);}
+.excluded-note{font-size:11px;color:var(--red);}
+
+/* how it works */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+.step .num{font-family:'JetBrains Mono',monospace;color:var(--teal);font-weight:600;font-size:13px;}
+.step h3{font-size:14.5px;margin:8px 0 6px;}
+.step p{color:var(--muted);font-size:12.5px;margin:0;}
+
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.feature{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;}
+.feature h3{font-size:14.5px;margin-bottom:6px;}
+.feature p{color:var(--muted);font-size:12.5px;margin:0;}
+
+/* footer */
+.footer{background:var(--navy);color:#B9C9C4;padding:38px 0 26px;margin-top:20px;}
+.footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;}
+.footer .logo{color:#fff;}
+.footer a{color:#B9C9C4;font-size:13px;}
+.footer a:hover{color:#fff;}
+.footer .cols{display:flex;gap:60px;}
+.footer .col h4{font-family:'Space Grotesk',sans-serif;font-size:12px;color:#fff;margin-bottom:10px;}
+.footer .col a{display:block;margin-bottom:7px;}
+.footer .bottom{border-top:1px solid rgba(255,255,255,.12);margin-top:26px;padding-top:16px;font-size:11.5px;color:#8AA0999;}
+
+/* generic pages */
+.page-hero{padding:44px 0 10px;}
+.page-hero h1{font-size:30px;margin-bottom:10px;}
+.page-hero p{color:var(--muted);max-width:640px;font-size:14.5px;}
+.split{display:grid;grid-template-columns:1.3fr .9fr;gap:30px;align-items:start;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;}
+.bullet-list{list-style:none;margin:0;padding:0;}
+.bullet-list li{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.bullet-list li:last-child{border-bottom:none;}
+.bullet-list li .tick{color:var(--teal);font-weight:700;}
+
+/* auth pages */
+.auth-wrap{max-width:420px;margin:50px auto;}
+.auth-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px;}
+.auth-card h2{font-size:20px;margin-bottom:4px;}
+.auth-card p.sub{color:var(--muted);font-size:12.5px;margin-bottom:20px;}
+label.field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:500;margin-bottom:12px;}
+input,select,textarea{font-family:'Inter',sans-serif;font-size:13.5px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#FCFCFB;width:100%;}
+textarea{resize:vertical;min-height:64px;}
+.hint-box{background:var(--teal-tint);border:1px solid #CFE7E2;border-radius:8px;padding:10px 12px;font-size:11.5px;color:var(--teal-dark);margin-bottom:18px;}
+.quick-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;margin:0 8px 8px 0;}
+.quick-chip:hover{border-color:var(--teal);color:var(--teal-dark);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}
+.error-box{background:var(--red-tint);color:var(--red);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:14px;}
+.banner{border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:18px;}
+.banner.amber{background:var(--amber-tint);color:var(--amber);}
+
+/* dashboard shell */
+.dash-shell{display:flex;min-height:calc(100vh - 130px);}
+.dash-side{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);padding:20px 0;}
+.dash-side .who{padding:0 20px 16px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+.dash-side .who b{display:block;font-size:13px;}
+.dash-side .who span{color:var(--muted);font-size:11.5px;}
+.nav-item{padding:10px 22px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--ink);background:#FAFAF8;}
+.nav-item.active{color:var(--teal-dark);font-weight:600;border-left:3px solid var(--teal);background:var(--teal-tint);}
+.dash-main{flex:1;padding:26px 32px 60px;max-width:920px;}
+.runway{width:150px;flex-shrink:0;}
+.runway-track{height:6px;border-radius:99px;background:#ECEEE9;overflow:hidden;margin-top:5px;}
+.runway-fill{height:100%;border-radius:99px;}
+.runway-fill.green{background:var(--green);}
+.runway-fill.amber{background:var(--amber);}
+.runway-fill.red{background:var(--red);}
+.empty{color:var(--muted);font-size:13px;padding:24px 0;text-align:center;}
+.row{display:flex;align-items:center;gap:16px;}
+.section-label{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;margin:22px 0 10px;}
+.add-form{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;}
+.checks{display:flex;gap:16px;font-size:12px;color:var(--muted);grid-column:span 4;align-items:center;}
+.checks label{display:flex;align-items:center;gap:6px;font-weight:400;color:var(--muted);}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,37,45,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.modal{background:#fff;border-radius:var(--radius);max-width:480px;width:100%;padding:26px;max-height:90vh;overflow:auto;}
+.modal h3{font-size:17px;margin-bottom:4px;}
+.modal p.sub{color:var(--muted);font-size:12px;margin-bottom:16px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;}
+
+.audit-row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.audit-time{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11.5px;width:150px;flex-shrink:0;}
+
+@media (max-width:860px){
+  .hero-grid,.split{grid-template-columns:1fr;}
+  .steps,.feature-grid{grid-template-columns:1fr 1fr;}
+  .dash-shell{flex-direction:column;}
+  .dash-side{width:100%;display:flex;overflow-x:auto;padding:10px;}
+  .nav-links{display:none;}
+  table{font-size:12px;}
+}
+</style>
+</head>
+<body>
+<div id="nav"></div>
+<main id="page"></main>
+<div id="footer"></div>
+<div id="modal-root"></div>
+
+<script>
+/* ================= DATA ================= */
+const NOW = () => Date.now();
+const daysFromNow = n => new Date(NOW() + n*86400000);
+const hoursFromNow = n => new Date(NOW() + n*3600000);
+
+let facilities = [
+  { id:'knh',   name:'Kenyatta National Hospital', type:'Hospital',  county:'Nairobi',  license:'MOH-HOSP-0012', contact:'Dr. Wanjiru Kamau', phone:'0722 000 111', email:'pharmacy@knh.or.ke', verified:true },
+  { id:'mach',  name:'Machakos Level 5 Hospital',   type:'Hospital',  county:'Machakos', license:'MOH-HOSP-0451', contact:'Mr. Peter Mutuku',  phone:'0733 222 333', email:'pharmacy@machakoslevel5.go.ke', verified:true },
+  { id:'mbag',  name:'Mbagathi County Hospital',    type:'Hospital',  county:'Nairobi',  license:'MOH-HOSP-0198', contact:'Ms. Faith Achieng', phone:'0711 444 555', email:'pharmacy@mbagathihospital.go.ke', verified:true },
+  { id:'kemsa', name:'KEMSA Central Warehouse',     type:'Warehouse', county:'Nairobi',  license:'KEMSA-WH-001',  contact:'Mr. Brian Otieno',  phone:'0700 666 777', email:'distribution@kemsa.co.ke', verified:true },
+];
+
+let listings = [
+  { id:'L1', facilityId:'knh',  drug:'Amoxicillin',          form:'Capsules',          strength:'500mg',    qty:4000,  batchNo:'AMX-2405-11', expiry:hoursFromNow(6),   storage:'ambient',    controlled:false, verification:'verified' },
+  { id:'L2', facilityId:'knh',  drug:'Ceftriaxone',          form:'Injection vial',    strength:'1g',       qty:1200,  batchNo:'CFX-2405-03', expiry:daysFromNow(3),    storage:'ambient',    controlled:false, verification:'verified' },
+  { id:'L3', facilityId:'mach', drug:'Paracetamol Infusion', form:'IV Infusion 100ml', strength:'1g/100ml', qty:2500,  batchNo:'PCM-2405-30', expiry:daysFromNow(9),    storage:'ambient',    controlled:false, verification:'verified' },
+  { id:'L4', facilityId:'mach', drug:'ORS Sachets',          form:'Sachet',            strength:'—',        qty:10000, batchNo:'ORS-2401-14', expiry:daysFromNow(60),   storage:'ambient',    controlled:false, verification:'verified' },
+  { id:'L5', facilityId:'kemsa',drug:'IV Normal Saline',     form:'Infusion 500ml',    strength:'0.9%',     qty:15000, batchNo:'NS-2406-19',  expiry:daysFromNow(21),   storage:'ambient',    controlled:false, verification:'verified' },
+  { id:'L6', facilityId:'knh',  drug:'Insulin Soluble',      form:'Vial',              strength:'100IU/ml', qty:600,   batchNo:'INS-2403-07', expiry:daysFromNow(30),   storage:'cold-chain', controlled:false, verification:'verified' },
+  { id:'L7', facilityId:'knh',  drug:'Diazepam',             form:'Injection',         strength:'10mg/2ml', qty:300,   batchNo:'DZP-2404-02', expiry:daysFromNow(45),   storage:'ambient',    controlled:true,  verification:'verified' },
+  { id:'L8', facilityId:'mbag', drug:'Amoxicillin',          form:'Capsules',          strength:'500mg',    qty:150,   batchNo:'AMX-2312-05', expiry:daysFromNow(2),    storage:'ambient',    controlled:false, verification:'pending'  },
+];
+let listingSeq = 9;
+
+let requests = []; // {id, listingId, requestingFacilityId, orgName, license, contact, phone, email, county, qty, purpose, status, submittedAt}
+let requestSeq = 1;
+
+let auditLog = [];
+function log(event, detail){ auditLog.unshift({ ts:new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}), event, detail }); }
+log('Platform initialised', 'Seed listings and facility accounts loaded for demonstration.');
+
+const ADMIN = { email:'admin@dawatrack.co.ke', password:'DawaTrack@2026' };
+let currentUser = null; // {role:'facility', facilityId} | {role:'admin'}
+
+/* ================= HELPERS ================= */
+function fac(id){ return facilities.find(f=>f.id===id); }
+function facName(l){ return l.facilityId ? fac(l.facilityId).name : (l.facilityNameOverride||'Dawa Track (on behalf)'); }
+function facCounty(l){ return l.facilityId ? fac(l.facilityId).county : (l.countyOverride||'—'); }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtQty(n){ return n.toLocaleString(); }
+
+function cdParts(expiry){
+  const diff = new Date(expiry).getTime() - NOW();
+  if(diff<=0) return {text:'Expired', cls:'red', urgent:true};
+  const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000),
+        m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+  const cls = diff <= 86400000 ? 'red' : diff <= 7*86400000 ? 'amber' : 'green';
+  const urgent = diff <= 86400000;
+  const text = d>0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`;
+  return {text, cls, urgent};
+}
+function cdSpan(expiry, big){
+  const iso = new Date(expiry).toISOString();
+  return `<span class="cd ${big?'cd-big':'mono'}" data-expiry="${iso}"></span>`;
+}
+function tickCountdowns(){
+  document.querySelectorAll('.cd').forEach(el=>{
+    const p = cdParts(el.getAttribute('data-expiry'));
+    el.textContent = p.text;
+    el.classList.toggle('urgent', p.urgent);
+  });
+}
+setInterval(tickCountdowns, 1000);
+
+function runwayBar(expiry){
+  const diff = new Date(expiry).getTime() - NOW();
+  const days = diff/86400000;
+  const pct = Math.max(3, Math.min(100, (days/180)*100));
+  const cls = days<=1 ? 'red' : days<=7 ? 'amber' : 'green';
+  return `<div class="runway"><div class="runway-track"><div class="runway-fill ${cls}" style="width:${pct}%"></div></div></div>`;
+}
+
+function eligibilityNote(l){
+  if(l.controlled) return 'Controlled substance — handled separately under chain-of-custody rules, not open to network transfer.';
+  if(l.storage==='cold-chain') return 'Cold-chain item — awaiting temperature-log verification support before transfer.';
+  return null;
+}
+
+function requestBadge(status){
+  const map = { pending:['amber','Pending review'], approved:['teal','Approved'], dispatched:['teal','Dispatched'], completed:['green','Completed'], rejected:['red','Rejected'] };
+  const [c,l] = map[status]; return `<span class="badge ${c}">${l}</span>`;
+}
+function verifBadge(v){
+  const map = { pending:['amber','Pending verification'], verified:['green','Verified'], rejected:['red','Rejected'] };
+  const [c,l] = map[v]; return `<span class="badge ${c}">${l}</span>`;
+}
+
+/* ================= ROUTER ================= */
+function navigate(r){ location.hash = r; }
+window.addEventListener('hashchange', renderApp);
+function currentRoute(){ return (location.hash||'#home').slice(1); }
+
+function renderApp(){
+  let route = currentRoute();
+  if(route==='dashboard' && !(currentUser && currentUser.role==='facility')) route='login';
+  if(route==='admin' && !(currentUser && currentUser.role==='admin')) route='admin-login';
+  document.getElementById('nav').innerHTML = renderNav(route);
+  document.getElementById('footer').innerHTML = ['login','register','admin-login','dashboard','admin'].includes(route) ? '' : renderFooter();
+  const pageFns = { home:renderHome, about:renderAbout, facility:renderFacilityInfo, login:renderLogin, register:renderRegister,
+    'admin-login':renderAdminLogin, dashboard:renderDashboard, admin:renderAdmin };
+  document.getElementById('page').innerHTML = (pageFns[route]||renderHome)();
+  tickCountdowns();
+  window.scrollTo(0,0);
+}
+
+function renderNav(route){
+  const links = [['home','Home'],['about','About'],['facility','Facility']];
+  const linkHtml = links.map(([r,l])=>`<a href="#${r}" class="${route===r?'active':''}">${l}</a>`).join('');
+  let right = '';
+  if(currentUser && currentUser.role==='facility'){
+    right = `<a href="#dashboard" class="btn outline small">My Dashboard</a><button class="btn ghost" onclick="logout()">Log out</button>`;
+  } else if(currentUser && currentUser.role==='admin'){
+    right = `<a href="#admin" class="btn outline small">Admin Dashboard</a><button class="btn ghost" onclick="logout()">Log out</button>`;
+  } else {
+    right = `<a href="#admin-login" class="btn ghost">Admin</a><a href="#login" class="btn outline">Log in</a><a href="#register" class="btn primary">Register</a>`;
+  }
+  return `<div class="nav"><div class="nav-inner">
+    <a href="#home" class="logo"><span class="dot"></span>Dawa Track</a>
+    <div class="nav-links">${linkHtml}</div>
+    <div class="nav-right">${right}</div>
+  </div></div>`;
+}
+
+function renderFooter(){
+  return `<div class="footer"><div class="wrap">
+    <div><div class="logo">Dawa Track</div><p style="max-width:220px;margin-top:10px;">Before expiry, not after. A neutral platform coordinating short-dated medicine between facilities across Kenya.</p></div>
+    <div class="cols">
+      <div class="col"><h4>Platform</h4><a href="#home">Available medicine</a><a href="#about">About</a><a href="#facility">For facilities</a></div>
+      <div class="col"><h4>Access</h4><a href="#login">Facility login</a><a href="#register">Register facility</a><a href="#admin-login">Admin</a></div>
+    </div>
+  </div><div class="wrap bottom">© 2026 Dawa Track. A safe-disposal company extending its work upstream, before medicine becomes waste.</div></div>`;
+}
+
+function logout(){ currentUser=null; navigate('home'); }
+
+/* ================= HOME ================= */
+function renderHome(){
+  const verified = listings.filter(l=>l.verification==='verified' && l.qty>0).sort((a,b)=>new Date(a.expiry)-new Date(b.expiry));
+  const featured = verified[0];
+  const totalQty = verified.reduce((s,l)=>s+l.qty,0);
+
+  const rows = verified.map(l=>{
+    const note = eligibilityNote(l);
+    return `<tr>
+      <td><div class="drug-name">${l.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${l.strength}</span></div><div class="drug-sub">${l.form} · batch ${l.batchNo}</div></td>
+      <td class="mono">${fmtQty(l.qty)}</td>
+      <td><div class="held-at">${facName(l)}</div><div class="county">${facCounty(l)}</div></td>
+      <td>${fmtDate(l.expiry)}<br>${cdSpan(l.expiry)}</td>
+      <td>${runwayBar(l.expiry)}</td>
+      <td>${note ? `<div class="excluded-note">${note}</div>` : `<button class="btn primary small" onclick="openRequestModal('${l.id}')">Request</button>`}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" class="empty">No verified listings at the moment — check back soon.</td></tr>`;
+
+  return `
+  <div class="hero"><div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow" style="color:#9FD8CC">Facility-to-facility medicine coordination</span>
+      <h1>Before expiry, not after.</h1>
+      <p class="lead">Dawa Track connects hospitals, clinics and warehouses so short-dated medicine gets used where it's needed — instead of destroyed where it isn't.</p>
+      <div class="cta-row">
+        <a href="#browse-table" class="btn primary">Browse available medicine</a>
+        <a href="#register" class="btn outline">List your surplus stock</a>
+      </div>
+      <div class="stats-strip">
+        <div class="stat"><b>${facilities.length}</b><span>Participating facilities</span></div>
+        <div class="stat"><b>${verified.length}</b><span>Active listings</span></div>
+        <div class="stat"><b>${fmtQty(totalQty)}</b><span>Units currently available</span></div>
+      </div>
+    </div>
+    ${featured ? `<div class="urgent-card">
+      <span class="eyebrow"><span class="pulse-dot"></span>Closest to expiry right now</span>
+      <div class="drug">${featured.drug} ${featured.strength}</div>
+      <div class="meta">${fmtQty(featured.qty)} units · held at ${facName(featured)}, ${facCounty(featured)}</div>
+      ${cdSpan(featured.expiry,true)}
+      <div style="margin-top:16px;"><a href="#browse-table" class="btn outline small">View listing</a></div>
+    </div>` : ''}
+  </div></div>
+
+  <section class="wrap">
+    <div class="section-head"><h2>How it works</h2><p>Dawa Track sits between facilities as a verified, neutral coordinator — not a warehouse for the medicine itself.</p></div>
+    <div class="steps">
+      <div class="step"><span class="num">01</span><h3>Facility lists surplus</h3><p>A hospital or KEMSA warehouse logs short-dated stock they can't use in time.</p></div>
+      <div class="step"><span class="num">02</span><h3>Dawa Track verifies</h3><p>Our team checks batch details before a listing goes live to the network.</p></div>
+      <div class="step"><span class="num">03</span><h3>Another facility requests it</h3><p>A facility in need submits a request with verification details.</p></div>
+      <div class="step"><span class="num">04</span><h3>We approve & oversee transfer</h3><p>Dawa Track approves the match and tracks dispatch through to receipt.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="browse-table">
+    <div class="section-head"><h2>Medicine nearing expiry, network-wide</h2><p>Sorted by soonest expiry. Requesting opens a short verification form — nothing is reserved until Dawa Track approves it.</p></div>
+    <div class="table-card"><table>
+      <thead><tr><th>Drug</th><th>Quantity</th><th>Held at</th><th>Expiry / countdown</th><th>Time remaining</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </section>
+  `;
+}
+
+/* ================= ABOUT ================= */
+function renderAbout(){
+  return `
+  <div class="page-hero wrap"><span class="eyebrow">About Dawa Track</span>
+    <h1>We started in safe disposal. We noticed something on the way.</h1>
+    <p>Dawa Track's core business is the compliant, safe disposal of expired pharmaceuticals for hospitals and warehouses across Kenya. Doing that work at scale showed us something hard to ignore: a large share of what arrives for disposal isn't expired yet — it's simply surplus at one facility while another facility, sometimes a short drive away, is short of exactly that drug.</p>
+  </div>
+  <section class="wrap">
+    <div class="split">
+      <div>
+        <div class="section-label" style="margin-top:0">The problem</div>
+        <p style="color:var(--muted)">Stock levels rarely match need in real time. A hospital may over-order ahead of a demand shift that doesn't materialise, while another facility a county away is rationing the same medicine. Without a shared, verified view of what's available and how urgently, that mismatch usually resolves the same way: waste on one side, shortage on the other.</p>
+        <div class="section-label">The solution</div>
+        <p style="color:var(--muted)">Dawa Track acts as a neutral, verified intermediary between facilities — not a party to the medicine itself. Facilities list what they have surplus of; other facilities request what they need; our team verifies both sides and oversees the handover, the same way we already oversee compliant disposal.</p>
+        <div class="section-label">What we don't do (yet)</div>
+        <ul class="bullet-list">
+          <li><span class="tick">—</span> We don't currently facilitate transfer of controlled substances, which remain governed by separate chain-of-custody requirements.</li>
+          <li><span class="tick">—</span> We don't move cold-chain products until in-transit temperature verification is in place.</li>
+          <li><span class="tick">—</span> We don't take custody of medicine ourselves — transfers happen facility to facility, with Dawa Track approving and recording each step.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="section-label" style="margin-top:0">Where this sits legally</div>
+        <p style="color:var(--muted);font-size:13px;">This model follows the spirit of the Pharmacy and Poisons Board's own guidance on stock rotation and redistribution of short-dated products — it doesn't replace it. Every listing and every transfer is logged, timestamped, and available for audit.</p>
+        <div class="section-label">Who's involved</div>
+        <p style="color:var(--muted);font-size:13px;">Hospitals, county health facilities, and KEMSA warehouses. Facilities don't need an account to take part — Dawa Track can list or request on a facility's behalf where that's easier.</p>
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+/* ================= FACILITY INFO ================= */
+function renderFacilityInfo(){
+  return `
+  <section class="wrap page-hero">
+    <div class="split" style="align-items:center;">
+      <div>
+        <span class="eyebrow">For facilities</span>
+        <h1 style="margin-top:8px;">Your surplus, someone else's shortage.</h1>
+        <p>Hospitals, clinics and warehouses use Dawa Track to list short-dated stock, request medicine they're running low on, and track every transfer — with Dawa Track verifying and coordinating each step.</p>
+      </div>
+      <div class="card">
+        <p style="font-size:13px;color:var(--muted);margin-top:0;">Ready to take part?</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="#register" class="btn primary" style="text-align:center;">Register your facility</a>
+          <a href="#login" class="btn outline" style="text-align:center;">Facility log in</a>
+        </div>
+        <p style="font-size:11.5px;color:var(--muted);margin-top:14px;margin-bottom:0;">No account? Dawa Track can list or request stock on your behalf — just get in touch.</p>
+      </div>
+    </div>
+  </section>
+  <section class="wrap">
+    <div class="section-head"><h2>What a facility can do</h2></div>
+    <div class="feature-grid">
+      <div class="feature"><h3>List surplus stock</h3><p>Log short-dated batches with quantity, batch number and expiry so Dawa Track can verify and publish them.</p></div>
+      <div class="feature"><h3>Request what you need</h3><p>Browse the network and request medicine another facility has in surplus, before it expires unused.</p></div>
+      <div class="feature"><h3>Track every transfer</h3><p>See the status of your requests and listings from submission through to confirmed receipt.</p></div>
+      <div class="feature"><h3>No cost to join</h3><p>Dawa Track's role here is coordination and disposal — not a fee for facilities trying to reduce waste.</p></div>
+      <div class="feature"><h3>Verified by Dawa Track</h3><p>Every listing is checked before it goes live, and every request is reviewed before a transfer is approved.</p></div>
+      <div class="feature"><h3>Optional account</h3><p>Prefer not to manage a login? Call Dawa Track directly and we'll list or request on your behalf.</p></div>
+    </div>
+  </section>
+  `;
+}
+
+/* ================= AUTH: LOGIN ================= */
+function renderLogin(){
+  const chips = facilities.map(f=>`<span class="quick-chip" onclick="quickFacilityLogin('${f.id}')">${f.name}</span>`).join('');
+  return `<div class="auth-wrap"><div class="auth-card">
+    <h2>Facility log in</h2>
+    <p class="sub">Access your listings, requests and transfers.</p>
+    <div class="hint-box">Demo mode — click a facility below for instant access, or enter its email with any password.</div>
+    <div style="margin-bottom:18px;">${chips}</div>
+    <div id="login-error"></div>
+    <label class="field">Email<input type="text" id="li-email" placeholder="pharmacy@yourfacility.go.ke"></label>
+    <label class="field">Password<input type="password" id="li-password" placeholder="••••••••"></label>
+    <button class="btn primary" style="width:100%" onclick="doLogin()">Log in</button>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px;">No account yet? <a href="#register" style="color:var(--teal-dark);font-weight:600;">Register your facility</a></p>
+  </div></div>`;
+}
+function quickFacilityLogin(id){ currentUser={role:'facility', facilityId:id}; log('Facility login', `${fac(id).name} logged in.`); navigate('dashboard'); }
+function doLogin(){
+  const email = document.getElementById('li-email').value.trim().toLowerCase();
+  const match = facilities.find(f=>f.email.toLowerCase()===email);
+  if(!match){ document.getElementById('login-error').innerHTML = `<div class="error-box">No facility account found for that email in this demo. Try one of the quick-access chips above.</div>`; return; }
+  quickFacilityLogin(match.id);
+}
+
+/* ================= AUTH: REGISTER ================= */
+function renderRegister(){
+  return `<div class="auth-wrap" style="max-width:520px;"><div class="auth-card">
+    <h2>Register your facility</h2>
+    <p class="sub">Create an account to list surplus stock, request medicine, and track transfers.</p>
+    <div class="form-grid">
+      <label class="field">Facility name<input type="text" id="rg-name" placeholder="e.g. Nyeri County Hospital"></label>
+      <label class="field">Facility type
+        <select id="rg-type"><option>Hospital</option><option>Clinic</option><option>Warehouse</option><option>Pharmacy</option></select>
+      </label>
+      <label class="field">County<input type="text" id="rg-county" placeholder="Nyeri"></label>
+      <label class="field">License / registration no.<input type="text" id="rg-license" placeholder="MOH-HOSP-XXXX"></label>
+      <label class="field">Contact person<input type="text" id="rg-contact" placeholder="Full name"></label>
+      <label class="field">Phone<input type="text" id="rg-phone" placeholder="07XX XXX XXX"></label>
+      <label class="field" style="grid-column:span 2">Email<input type="text" id="rg-email" placeholder="pharmacy@yourfacility.go.ke"></label>
+      <label class="field" style="grid-column:span 2">Password<input type="password" id="rg-password" placeholder="Choose a password"></label>
+    </div>
+    <div id="register-error"></div>
+    <button class="btn primary" style="width:100%" onclick="doRegister()">Create account</button>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px;">Already registered? <a href="#login" style="color:var(--teal-dark);font-weight:600;">Log in</a></p>
+  </div></div>`;
+}
+function doRegister(){
+  const name = document.getElementById('rg-name').value.trim();
+  const email = document.getElementById('rg-email').value.trim();
+  const county = document.getElementById('rg-county').value.trim() || '—';
+  const license = document.getElementById('rg-license').value.trim() || '—';
+  const contact = document.getElementById('rg-contact').value.trim() || '—';
+  const phone = document.getElementById('rg-phone').value.trim() || '—';
+  const type = document.getElementById('rg-type').value;
+  if(!name || !email){ document.getElementById('register-error').innerHTML = `<div class="error-box">Please fill in at least the facility name and email.</div>`; return; }
+  const id = 'f'+(facilities.length+1)+Date.now()%1000;
+  facilities.push({ id, name, type, county, license, contact, phone, email, verified:false });
+  log('Facility registered', `${name} (${type}, ${county}) created an account — pending verification.`);
+  currentUser = {role:'facility', facilityId:id};
+  navigate('dashboard');
+}
+
+/* ================= AUTH: ADMIN LOGIN ================= */
+function renderAdminLogin(){
+  return `<div class="auth-wrap"><div class="auth-card">
+    <h2>Dawa Track staff login</h2>
+    <p class="sub">For Dawa Track administrators only.</p>
+    <div class="hint-box">Demo credentials — email: <b>${ADMIN.email}</b> · password: <b>${ADMIN.password}</b></div>
+    <div id="admin-error"></div>
+    <label class="field">Email<input type="text" id="ad-email"></label>
+    <label class="field">Password<input type="password" id="ad-password"></label>
+    <button class="btn primary" style="width:100%" onclick="doAdminLogin()">Log in</button>
+  </div></div>`;
+}
+function doAdminLogin(){
+  const email = document.getElementById('ad-email').value.trim().toLowerCase();
+  const password = document.getElementById('ad-password').value;
+  if(email===ADMIN.email.toLowerCase() && password===ADMIN.password){
+    currentUser = {role:'admin'};
+    log('Admin login', 'Dawa Track staff signed in.');
+    navigate('admin');
+  } else {
+    document.getElementById('admin-error').innerHTML = `<div class="error-box">Incorrect email or password.</div>`;
+  }
+}
+
+/* ================= REQUEST MODAL ================= */
+function openRequestModal(listingId){
+  const l = listings.find(x=>x.id===listingId);
+  const prefFac = currentUser && currentUser.role==='facility' ? fac(currentUser.facilityId) : null;
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <h3>Request ${l.drug} ${l.strength}</h3>
+      <p class="sub">Held at ${facName(l)}, ${facCounty(l)} · ${fmtQty(l.qty)} available · expires ${fmtDate(l.expiry)}</p>
+      <label class="field">Requesting facility / organisation<input type="text" id="rq-org" value="${prefFac?prefFac.name:''}"></label>
+      <label class="field">License / registration no.<input type="text" id="rq-license" value="${prefFac?prefFac.license:''}"></label>
+      <div class="form-grid">
+        <label class="field">Contact person<input type="text" id="rq-contact" value="${prefFac?prefFac.contact:''}"></label>
+        <label class="field">Phone<input type="text" id="rq-phone" value="${prefFac?prefFac.phone:''}"></label>
+        <label class="field">Email<input type="text" id="rq-email" value="${prefFac?prefFac.email:''}"></label>
+        <label class="field">County<input type="text" id="rq-county" value="${prefFac?prefFac.county:''}"></label>
+      </div>
+      <label class="field">Quantity needed<input type="number" id="rq-qty" min="1" max="${l.qty}" value="${Math.min(l.qty,50)}"></label>
+      <label class="field">Purpose / intended use<textarea id="rq-purpose" placeholder="e.g. Restocking outpatient pharmacy, current shortage expected to last 3 weeks"></textarea></label>
+      <div id="rq-error"></div>
+      <div class="modal-actions">
+        <button class="btn outline" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="submitRequest('${listingId}')">Submit request</button>
+      </div>
+    </div>
+  </div>`;
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function submitRequest(listingId){
+  const l = listings.find(x=>x.id===listingId);
+  const org = document.getElementById('rq-org').value.trim();
+  const contact = document.getElementById('rq-contact').value.trim();
+  const phone = document.getElementById('rq-phone').value.trim();
+  const email = document.getElementById('rq-email').value.trim();
+  const county = document.getElementById('rq-county').value.trim();
+  const license = document.getElementById('rq-license').value.trim();
+  const purpose = document.getElementById('rq-purpose').value.trim();
+  let qty = parseInt(document.getElementById('rq-qty').value||'0',10);
+  if(!org || !contact || !phone || !qty){ document.getElementById('rq-error').innerHTML = `<div class="error-box">Please fill in the facility name, contact person, phone and quantity.</div>`; return; }
+  qty = Math.min(qty, l.qty);
+  const req = { id:'R'+String(requestSeq++).padStart(3,'0'), listingId, requestingFacilityId: currentUser && currentUser.role==='facility' ? currentUser.facilityId : null,
+    orgName:org, license, contact, phone, email, county, qty, purpose, status:'pending', submittedAt:new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) };
+  requests.unshift(req);
+  log('Request submitted', `${req.id}: ${org} requested ${qty} × ${l.drug} (${l.batchNo}) from ${facName(l)}.`);
+  closeModal();
+  document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" onclick="closeModal()"><div class="modal">
+    <h3>Request submitted</h3><p class="sub">Dawa Track will verify the details and get back to you. Reference: <b class="mono">${req.id}</b></p>
+    <div class="modal-actions"><button class="btn primary" onclick="closeModal()">Done</button></div>
+  </div></div>`;
+}
+
+/* ================= FACILITY DASHBOARD ================= */
+let dashTab = 'listings';
+function renderDashboard(){
+  const facility = fac(currentUser.facilityId);
+  const tabs = [['listings','My Listings'],['browse','Browse & Request'],['requests','My Requests']];
+  const nav = tabs.map(([id,l])=>`<div class="nav-item ${dashTab===id?'active':''}" onclick="setDashTab('${id}')">${l}</div>`).join('');
+
+  let body = '';
+  if(dashTab==='listings') body = dashListings(facility);
+  else if(dashTab==='browse') body = dashBrowse(facility);
+  else body = dashRequests(facility);
+
+  return `<div class="dash-shell">
+    <div class="dash-side">
+      <div class="who"><b>${facility.name}</b><span>${facility.type} · ${facility.county}</span></div>
+      ${nav}
+    </div>
+    <div class="dash-main">
+      ${!facility.verified ? `<div class="banner amber">Your facility account is pending verification by Dawa Track. You can still submit listings and requests in the meantime.</div>` : ''}
+      ${body}
+    </div>
+  </div>`;
+}
+function setDashTab(id){ dashTab=id; renderApp(); }
+
+function dashListings(facility){
+  const mine = listings.filter(l=>l.facilityId===facility.id);
+  const rows = mine.map(l=>`
+    <div class="card" style="margin-bottom:12px;">
+      <div class="row">
+        <div style="flex:1;">
+          <div class="drug-name">${l.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${l.strength}</span></div>
+          <div class="drug-sub">${l.form} · qty <span class="mono">${fmtQty(l.qty)}</span> · batch ${l.batchNo}</div>
+          <div style="margin-top:6px;">${verifBadge(l.verification)}</div>
+        </div>
+        ${runwayBar(l.expiry)}
+      </div>
+    </div>`).join('') || '<div class="empty">No listings submitted yet.</div>';
+
+  return `
+    <h1 style="font-size:19px;">My Listings</h1>
+    <p style="color:var(--muted);font-size:13px;">Submit short-dated stock here. Dawa Track verifies each listing before it appears on the public site.</p>
+    <div class="section-label">Submit a new batch</div>
+    <div class="card">
+      <div class="add-form">
+        <label class="field">Drug name<input type="text" id="nb-drug" placeholder="e.g. Amoxicillin"></label>
+        <label class="field">Form<input type="text" id="nb-form" placeholder="Capsules / Vial"></label>
+        <label class="field">Strength<input type="text" id="nb-strength" placeholder="500mg"></label>
+        <label class="field">Quantity<input type="number" id="nb-qty" min="1"></label>
+        <label class="field">Batch no.<input type="text" id="nb-batch" placeholder="AMX-2601-01"></label>
+        <label class="field">Expiry date<input type="date" id="nb-expiry"></label>
+        <label class="field">Storage<select id="nb-storage"><option value="ambient">Ambient</option><option value="cold-chain">Cold-chain (2–8°C)</option></select></label>
+        <div></div>
+        <div class="checks"><label><input type="checkbox" id="nb-controlled"> Controlled substance</label></div>
+      </div>
+      <button class="btn primary" onclick="submitListing()">Submit for verification</button>
+    </div>
+    <div class="section-label">Your listings</div>
+    ${rows}
+  `;
+}
+function submitListing(){
+  const drug = document.getElementById('nb-drug').value.trim();
+  const form = document.getElementById('nb-form').value.trim();
+  const strength = document.getElementById('nb-strength').value.trim() || '—';
+  const qty = parseInt(document.getElementById('nb-qty').value||'0',10);
+  const batchNo = document.getElementById('nb-batch').value.trim();
+  const expiry = document.getElementById('nb-expiry').value;
+  const storage = document.getElementById('nb-storage').value;
+  const controlled = document.getElementById('nb-controlled').checked;
+  if(!drug||!qty||!batchNo||!expiry){ alert('Please fill in drug name, quantity, batch number and expiry date.'); return; }
+  const id = 'L'+(listingSeq++);
+  listings.push({ id, facilityId:currentUser.facilityId, drug, form, strength, qty, batchNo, expiry:new Date(expiry), storage, controlled, verification:'pending' });
+  log('Listing submitted', `${fac(currentUser.facilityId).name} submitted ${qty} × ${drug} (${batchNo}) — pending verification.`);
+  renderApp();
+}
+
+function dashBrowse(facility){
+  const others = listings.filter(l=>l.facilityId!==facility.id && l.verification==='verified' && l.qty>0).sort((a,b)=>new Date(a.expiry)-new Date(b.expiry));
+  const rows = others.map(l=>{
+    const note = eligibilityNote(l);
+    return `<div class="card" style="margin-bottom:12px;">
+      <div class="row">
+        <div style="flex:1;">
+          <div class="drug-name">${l.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${l.strength}</span></div>
+          <div class="drug-sub">${l.form} · available <span class="mono">${fmtQty(l.qty)}</span> · batch ${l.batchNo}</div>
+          <div style="font-size:11.5px;color:var(--teal-dark);font-weight:600;margin-top:4px;">Held at ${facName(l)}, ${facCounty(l)}</div>
+        </div>
+        ${runwayBar(l.expiry)}
+      </div>
+      ${note ? `<div class="excluded-note" style="margin-top:8px;">${note}</div>` : `<div style="margin-top:10px;"><button class="btn primary small" onclick="openRequestModal('${l.id}')">Request transfer</button></div>`}
+    </div>`;
+  }).join('') || '<div class="empty">No verified listings elsewhere in the network right now.</div>';
+
+  return `<h1 style="font-size:19px;">Browse & Request</h1>
+    <p style="color:var(--muted);font-size:13px;">Verified surplus stock from other facilities and warehouses, nearest expiry first.</p>
+    ${rows}`;
+}
+
+function dashRequests(facility){
+  const mine = requests.filter(r=>r.requestingFacilityId===facility.id);
+  const rows = mine.map(r=>{
+    const l = listings.find(x=>x.id===r.listingId);
+    let action = '';
+    if(r.status==='dispatched') action = `<button class="btn primary small" onclick="confirmReceiptFacility('${r.id}')">Confirm receipt</button>`;
+    return `<div class="card" style="margin-bottom:12px;">
+      <div class="row">
+        <div style="flex:1;">
+          <div class="drug-name">${r.id} · ${l.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${l.strength}</span></div>
+          <div class="drug-sub">qty <span class="mono">${fmtQty(r.qty)}</span> from ${facName(l)} · submitted ${r.submittedAt}</div>
+        </div>
+        ${requestBadge(r.status)}
+      </div>
+      ${action ? `<div style="margin-top:10px;">${action}</div>` : ''}
+    </div>`;
+  }).join('') || '<div class="empty">You haven\'t requested any medicine yet.</div>';
+
+  return `<h1 style="font-size:19px;">My Requests</h1>
+    <p style="color:var(--muted);font-size:13px;">Track requests you've made, from submission through to confirmed receipt.</p>
+    ${rows}`;
+}
+function confirmReceiptFacility(id){
+  const r = requests.find(x=>x.id===id);
+  r.status='completed';
+  log('Receipt confirmed', `${r.id}: ${r.orgName} confirmed receipt of ${r.qty} units.`);
+  renderApp();
+}
+
+/* ================= ADMIN DASHBOARD ================= */
+let adminTab = 'verify';
+function renderAdmin(){
+  const tabs = [['verify','Pending Verifications'],['requests','Pending Requests'],['transfers','Transfers'],['facilities','Facilities'],['audit','Audit Log']];
+  const nav = tabs.map(([id,l])=>`<div class="nav-item ${adminTab===id?'active':''}" onclick="setAdminTab('${id}')">${l}</div>`).join('');
+  let body = '';
+  if(adminTab==='verify') body = adminVerify();
+  else if(adminTab==='requests') body = adminRequests();
+  else if(adminTab==='transfers') body = adminTransfers();
+  else if(adminTab==='facilities') body = adminFacilities();
+  else body = adminAudit();
+  return `<div class="dash-shell">
+    <div class="dash-side"><div class="who"><b>Dawa Track</b><span>Staff console</span></div>${nav}</div>
+    <div class="dash-main">${body}</div>
+  </div>`;
+}
+function setAdminTab(id){ adminTab=id; renderApp(); }
+
+function adminVerify(){
+  const pending = listings.filter(l=>l.verification==='pending');
+  const rows = pending.map(l=>`
+    <div class="card" style="margin-bottom:12px;">
+      <div class="row">
+        <div style="flex:1;">
+          <div class="drug-name">${l.drug} <span class="mono" style="font-weight:400;color:var(--muted)">${l.strength}</span></div>
+          <div class="drug-sub">${l.form} · qty <span class="mono">${fmtQty(l.qty)}</span> · batch ${l.batchNo} · submitted by ${facName(l)}</div>
+        </div>
+        ${runwayBar(l.expiry)}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn primary small" onclick="verifyListing('${l.id}',true)">Verify & publish</button>
+        <button class="btn outline small" onclick="verifyListing('${l.id}',false)">Reject</button>
+      </div>
+    </div>`).join('') || '<div class="empty">Nothing awaiting verification.</div>';
+
+  return `<h1 style="font-size:19px;">Pending Verifications</h1>
+    <p style="color:var(--muted);font-size:13px;">Listings submitted by facilities, awaiting Dawa Track sign-off before going public.</p>
+    ${rows}
+    <div class="section-label">Add a listing on behalf of a facility</div>
+    <div class="card">
+      <div class="add-form">
+        <label class="field">Facility name<input type="text" id="ab-facility" placeholder="e.g. Naivasha Sub-County Hospital"></label>
+        <label class="field">County<input type="text" id="ab-county" placeholder="Nakuru"></label>
+        <label class="field">Drug name<input type="text" id="ab-drug"></label>
+        <label class="field">Form<input type="text" id="ab-form"></label>
+        <label class="field">Strength<input type="text" id="ab-strength"></label>
+        <label class="field">Quantity<input type="number" id="ab-qty" min="1"></label>
+        <label class="field">Batch no.<input type="text" id="ab-batch"></label>
+        <label class="field">Expiry date<input type="date" id="ab-expiry"></label>
+      </div>
+      <button class="btn primary" onclick="adminAddListing()">Add & publish immediately</button>
+    </div>`;
+}
+function verifyListing(id, approve){
+  const l = listings.find(x=>x.id===id);
+  l.verification = approve ? 'verified' : 'rejected';
+  log(approve?'Listing verified':'Listing rejected', `${l.drug} (${l.batchNo}) from ${facName(l)} was ${approve?'verified and published':'rejected'} by Dawa Track.`);
+  renderApp();
+}
+function adminAddListing(){
+  const facilityNameOverride = document.getElementById('ab-facility').value.trim();
+  const countyOverride = document.getElementById('ab-county').value.trim() || '—';
+  const drug = document.getElementById('ab-drug').value.trim();
+  const form = document.getElementById('ab-form').value.trim();
+  const strength = document.getElementById('ab-strength').value.trim() || '—';
+  const qty = parseInt(document.getElementById('ab-qty').value||'0',10);
+  const batchNo = document.getElementById('ab-batch').value.trim();
+  const expiry = document.getElementById('ab-expiry').value;
+  if(!facilityNameOverride||!drug||!qty||!batchNo||!expiry){ alert('Please fill in facility name, drug, quantity, batch number and expiry date.'); return; }
+  const id = 'L'+(listingSeq++);
+  listings.push({ id, facilityId:null, facilityNameOverride, countyOverride, drug, form, strength, qty, batchNo, expiry:new Date(expiry), storage:'ambient', controlled:false, verification:'verified' });
+  log('Listing added on behalf of facility', `Dawa Track added ${qty} × ${drug} (${batchNo}) on behalf of ${facilityNameOverride}.`);
+  renderApp();
+}
+
+function adminRequests(){
+  const pending = requests.filter(r=>r.status==='pending');
+  const rows = pending.map(r=>{
+    const l = listings.find(x=>x.id===r.listingId);
+    return `<div class="card" style="margin-bottom:12px;">
+      <div class="drug-name">${r.id} · ${r.qty} × ${l.drug} ${l.strength}</div>
+      <div class="drug-sub">Requested from ${facName(l)} · submitted ${r.submittedAt}</div>
+      <div style="margin-top:8px;font-size:12.5px;line-height:1.7;">
+        <b>${r.orgName}</b> (${r.license||'—'})<br>
+        Contact: ${r.contact} · ${r.phone} · ${r.email||'—'} · ${r.county||'—'}<br>
+        Purpose: ${r.purpose || '—'}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn primary small" onclick="decideRequest('${r.id}',true)">Approve</button>
+        <button class="btn outline small" onclick="decideRequest('${r.id}',false)">Reject</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">No requests awaiting review.</div>';
+  return `<h1 style="font-size:19px;">Pending Requests</h1>
+    <p style="color:var(--muted);font-size:13px;">Requester details are shown here for verification before a transfer is approved.</p>
+    ${rows}`;
+}
+function decideRequest(id, approve){
+  const r = requests.find(x=>x.id===id);
+  const l = listings.find(x=>x.id===r.listingId);
+  if(approve){
+    r.qty = Math.min(r.qty, l.qty);
+    l.qty -= r.qty;
+    r.status = 'approved';
+    log('Request approved', `${r.id}: Dawa Track approved ${r.qty} × ${l.drug} for ${r.orgName}.`);
+  } else {
+    r.status = 'rejected';
+    log('Request rejected', `${r.id}: Dawa Track rejected the request from ${r.orgName}.`);
+  }
+  renderApp();
+}
+
+function adminTransfers(){
+  const active = requests.filter(r=>['approved','dispatched','completed'].includes(r.status));
+  const rows = active.map(r=>{
+    const l = listings.find(x=>x.id===r.listingId);
+    let action = '';
+    if(r.status==='approved') action = `<button class="btn primary small" onclick="markDispatched('${r.id}')">Mark dispatched</button>`;
+    else if(r.status==='dispatched'){
+      action = r.requestingFacilityId
+        ? `<span class="excluded-note" style="color:var(--muted);">Awaiting ${r.orgName}'s receipt confirmation</span>`
+        : `<button class="btn primary small" onclick="confirmReceiptAdmin('${r.id}')">Confirm receipt (on behalf)</button>`;
+    }
+    return `<div class="card" style="margin-bottom:12px;">
+      <div class="row">
+        <div style="flex:1;">
+          <div class="drug-name">${r.id} · ${r.qty} × ${l.drug} ${l.strength}</div>
+          <div class="drug-sub">${facName(l)} → ${r.orgName}</div>
+        </div>
+        ${requestBadge(r.status)}
+      </div>
+      ${action ? `<div style="margin-top:10px;">${action}</div>` : ''}
+    </div>`;
+  }).join('') || '<div class="empty">No transfers in progress.</div>';
+  return `<h1 style="font-size:19px;">Transfers</h1>
+    <p style="color:var(--muted);font-size:13px;">Dawa Track coordinates dispatch and receipt for every approved request.</p>
+    ${rows}`;
+}
+function markDispatched(id){
+  const r = requests.find(x=>x.id===id);
+  r.status='dispatched';
+  const l = listings.find(x=>x.id===r.listingId);
+  log('Marked dispatched', `${r.id}: Dawa Track confirmed dispatch of ${r.qty} × ${l.drug} to ${r.orgName}.`);
+  renderApp();
+}
+function confirmReceiptAdmin(id){
+  const r = requests.find(x=>x.id===id);
+  r.status='completed';
+  log('Receipt confirmed on behalf', `${r.id}: Dawa Track confirmed receipt on behalf of ${r.orgName} (no account).`);
+  renderApp();
+}
+
+function adminFacilities(){
+  const rows = facilities.map(f=>`
+    <div class="card" style="margin-bottom:12px;">
+      <div class="row">
+        <div style="flex:1;">
+          <div class="drug-name">${f.name}</div>
+          <div class="drug-sub">${f.type} · ${f.county} · ${f.license} · ${f.contact} · ${f.phone}</div>
+        </div>
+        ${f.verified ? '<span class="badge green">Verified</span>' : '<span class="badge amber">Pending</span>'}
+      </div>
+      ${!f.verified ? `<div style="margin-top:10px;"><button class="btn primary small" onclick="verifyFacility('${f.id}')">Verify account</button></div>` : ''}
+    </div>`).join('');
+  return `<h1 style="font-size:19px;">Facilities</h1>
+    <p style="color:var(--muted);font-size:13px;">Registered accounts on the network.</p>
+    ${rows}`;
+}
+function verifyFacility(id){
+  fac(id).verified = true;
+  log('Facility account verified', `${fac(id).name}'s account was verified by Dawa Track.`);
+  renderApp();
+}
+
+function adminAudit(){
+  const rows = auditLog.map(a=>`<div class="audit-row"><div class="audit-time">${a.ts}</div><div><b>${a.event}</b><br><span style="color:var(--muted)">${a.detail}</span></div></div>`).join('') || '<div class="empty">No activity yet.</div>';
+  return `<h1 style="font-size:19px;">Audit Log</h1>
+    <p style="color:var(--muted);font-size:13px;">Full network activity — every listing, request, approval and transfer.</p>
+    <div class="card">${rows}</div>`;
+}
+
+/* ================= INIT ================= */
+renderApp();
+</script>
+</body>
+</html>
