@@ -1,103 +1,138 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>List Your Surplus Stock | Dawa Track</title>
-    <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>List Your Surplus Stock | Dawa Track</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="db.js"></script>
 </head>
 
 <body>
-    <header class="site-header">
-        <nav class="navbar">
-            <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="browse.html">Browse medicine</a>
-                <a class="active" href="surplus.html">Surplus stock</a>
-                <a href="login.html">Login</a>
-            </div>
-            <a href="login.html" class="btn btn-outline">Log in</a>
-        </nav>
-    </header>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a class="active" href="surplus.html">Surplus stock</a>
+        <a href="login.html">Login</a>
+      </div>
+      <a href="login.html" class="btn btn-outline">Log in</a>
+    </nav>
+  </header>
 
-    <main class="page">
-        <section class="hero-card">
-            <h1>List your surplus stock</h1>
-            <p>Share stock you cannot use in time so another facility can receive it before expiry.</p>
-        </section>
+  <main class="page">
+    <section class="hero-card">
+      <h1>List your surplus stock</h1>
+      <p>Share stock you cannot use in time so another facility can receive it before expiry.</p>
+    </section>
 
-        <section class="form-card">
-            <h2 class="section-title">Submit a surplus listing</h2>
-            <p class="section-subtitle">Fields marked with * are required.</p>
-            <form class="form-grid">
-                <label>
-                    Medicine name *
-                    <input type="text" placeholder="e.g. Amoxicillin 500mg" />
-                </label>
-                <label>
-                    Quantity available *
-                    <input type="number" placeholder="4000" />
-                </label>
-                <label>
-                    Facility name *
-                    <input type="text" placeholder="Your hospital or warehouse" />
-                </label>
-                <label>
-                    Expiry date *
-                    <input type="date" />
-                </label>
-                <label>
-                    Storage condition
-                    <select>
-                        <option>Ambient</option>
-                        <option>Cold chain</option>
-                        <option>Controlled</option>
-                    </select>
-                </label>
-                <label>
-                    Contact person
-                    <input type="text" placeholder="Pharmacy lead" />
-                </label>
-                <label>
-                    Phone number *
-                    <input type="tel" placeholder="0712345678" />
-                </label>
-                <label>
-                    Email address *
-                    <input type="email" placeholder="contact@facility.org" />
-                </label>
-                <label>
-                    Location address *
-                    <input type="text" placeholder="Ward, street or delivery point" />
-                </label>
-                <label style="grid-column: 1 / -1;">
-                    Notes
-                    <textarea
-                        placeholder="Share batch details, transport needs or special handling instructions."></textarea>
-                </label>
-                <div class="form-actions" style="grid-column: 1 / -1;">
-                    <button type="submit" class="btn btn-primary">Submit listing</button>
-                    <a href="browse.html" class="btn btn-outline">View available medicine</a>
-                </div>
-            </form>
-        </section>
-    </main>
-
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div>
-                <strong>Dawa Track</strong>
-                <p>Use the network to keep medicines moving and reduce waste.</p>
-            </div>
-            <div>
-                <a href="browse.html">Browse medicine</a><br />
-                <a href="surplus.html">List surplus stock</a><br />
-                <a href="login.html">Facility login</a>
-            </div>
+    <section class="form-card">
+      <h2 class="section-title">Submit a surplus listing</h2>
+      <p class="section-subtitle">Fields marked with * are required.</p>
+      <form id="surplusForm" class="form-grid">
+        <label>
+          Medicine name *
+          <input name="drug" type="text" placeholder="e.g. Amoxicillin 500mg" required />
+        </label>
+        <label>
+          Quantity available *
+          <input name="quantity" type="number" placeholder="4000" required />
+        </label>
+        <label>
+          Facility name *
+          <input name="facility" type="text" placeholder="Your hospital or warehouse" required />
+        </label>
+        <label>
+          Expiry date *
+          <input name="expiry" type="date" required />
+        </label>
+        <label>
+          Storage condition
+          <select name="storage">
+            <option>Ambient</option>
+            <option>Cold chain</option>
+            <option>Controlled</option>
+          </select>
+        </label>
+        <label>
+          Contact person
+          <input name="contactPerson" type="text" placeholder="Pharmacy lead" />
+        </label>
+        <label>
+          Phone number *
+          <input name="phone" type="tel" placeholder="0712345678" required />
+        </label>
+        <label>
+          Email address *
+          <input name="email" type="email" placeholder="contact@facility.org" required />
+        </label>
+        <label>
+          Location address *
+          <input name="location" type="text" placeholder="Ward, street or delivery point" required />
+        </label>
+        <label style="grid-column: 1 / -1;">
+          Notes
+          <textarea name="notes"
+            placeholder="Share batch details, transport needs or special handling instructions."></textarea>
+        </label>
+        <div class="form-actions" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn btn-primary">Submit listing</button>
+          <a href="index.html" class="btn btn-outline">View available medicine</a>
         </div>
-    </footer>
+        <p id="surplusSuccess" class="demo-note hidden" style="grid-column: 1 / -1;">Your surplus listing is pending
+          admin approval.</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Dawa Track</strong>
+        <p>Use the network to keep medicines moving and reduce waste.</p>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="about.html">About</a><br />
+        <a href="surplus.html">List surplus stock</a><br />
+        <a href="login.html">Facility login</a><br />
+        <a href="admin-login.html">Admin</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const surplusForm = document.getElementById('surplusForm');
+    const surplusSuccess = document.getElementById('surplusSuccess');
+
+    surplusForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(surplusForm);
+      const db = DawaDB.load();
+      db.medicines.push({
+        id: DawaDB.uid('med'),
+        drug: formData.get('drug'),
+        quantity: formData.get('quantity') + ' units',
+        facility: formData.get('facility'),
+        expiry: formData.get('expiry'),
+        storage: formData.get('storage'),
+        contactPerson: formData.get('contactPerson'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        location: formData.get('location'),
+        notes: formData.get('notes'),
+        status: 'pending',
+        approval: 'pending',
+      });
+      DawaDB.save(db);
+      surplusForm.reset();
+      surplusSuccess.classList.remove('hidden');
+      setTimeout(() => surplusSuccess.classList.add('hidden'), 3200);
+    });
+  </script>
 </body>
 
 </html>

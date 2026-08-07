@@ -1,225 +1,54 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Browse Available Medicine | Dawa Track</title>
-    <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting to Dawa Track home</title>
+  <meta http-equiv="refresh" content="0;url=index.html" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    window.location.replace('index.html');
+  </script>
 </head>
 
 <body>
-    <header class="site-header">
-        <nav class="navbar">
-            <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a class="active" href="browse.html">Browse medicine</a>
-                <a href="surplus.html">Surplus stock</a>
-                <a href="login.html">Login</a>
-            </div>
-            <a href="surplus.html" class="btn btn-primary">List stock</a>
-        </nav>
-    </header>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="surplus.html">Surplus stock</a>
+        <a href="login.html">Login</a>
+      </div>
+      <a href="surplus.html" class="btn btn-primary">List stock</a>
+    </nav>
+  </header>
 
-    <main class="page">
-        <section class="hero-card">
-            <h1>Browse available medicine</h1>
-            <p>See stock that is close to expiry and ready for transfer between facilities.</p>
-        </section>
+  <main class="page">
+    <section class="card">
+      <h1>Page moved</h1>
+      <p>You are being redirected to the new home page. If the redirect does not work, click the link below.</p>
+      <p><a href="index.html" class="btn btn-primary">Go to Home</a></p>
+    </section>
+  </main>
 
-        <section class="card">
-            <h2 class="section-title">Medicine available now</h2>
-            <p class="section-subtitle">Search by medicine name, facility or status and request stock directly.</p>
-            <div class="search-row">
-                <input id="medicineSearch" type="text" placeholder="Search medicine, facility or status" />
-                <button id="searchBtn" type="button" class="btn btn-primary">Search</button>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Medicine</th>
-                            <th>Quantity</th>
-                            <th>Facility</th>
-                            <th>Expiry</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="medicineTableBody">
-                        <tr class="medicine-row" data-name="Amoxicillin 500mg"
-                            data-facility="Kenyatta National Hospital" data-status="ready">
-                            <td>Amoxicillin 500mg</td>
-                            <td>4,000 units</td>
-                            <td>Kenyatta National Hospital</td>
-                            <td>3 days</td>
-                            <td><span class="status-pill green">Ready</span></td>
-                            <td><button type="button" class="btn btn-outline request-btn"
-                                    data-drug="Amoxicillin 500mg">Request</button></td>
-                        </tr>
-                        <tr class="medicine-row" data-name="Paracetamol Infusion" data-facility="Machakos Level 5"
-                            data-status="ready">
-                            <td>Paracetamol Infusion</td>
-                            <td>2,500 units</td>
-                            <td>Machakos Level 5</td>
-                            <td>9 days</td>
-                            <td><span class="status-pill green">Ready</span></td>
-                            <td><button type="button" class="btn btn-outline request-btn"
-                                    data-drug="Paracetamol Infusion">Request</button></td>
-                        </tr>
-                        <tr class="medicine-row" data-name="ORS Sachets" data-facility="Machakos Level 5"
-                            data-status="monitor">
-                            <td>ORS Sachets</td>
-                            <td>10,000 units</td>
-                            <td>Machakos Level 5</td>
-                            <td>60 days</td>
-                            <td><span class="status-pill amber">Monitor</span></td>
-                            <td><button type="button" class="btn btn-outline request-btn"
-                                    data-drug="ORS Sachets">Request</button></td>
-                        </tr>
-                        <tr class="medicine-row" data-name="IV Normal Saline" data-facility="KEMSA Central Warehouse"
-                            data-status="ready">
-                            <td>IV Normal Saline</td>
-                            <td>15,000 units</td>
-                            <td>KEMSA Central Warehouse</td>
-                            <td>21 days</td>
-                            <td><span class="status-pill green">Ready</span></td>
-                            <td><button type="button" class="btn btn-outline request-btn"
-                                    data-drug="IV Normal Saline">Request</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p id="noResults" class="empty-state" hidden>No medicine matches your search yet.</p>
-            </div>
-        </section>
-    </main>
-
-    <div id="requestModal" class="modal-backdrop hidden" aria-hidden="true">
-        <div class="modal-card">
-            <div class="modal-head">
-                <h3>Request medicine</h3>
-                <button type="button" class="modal-close" id="closeRequestModal"
-                    aria-label="Close request form">×</button>
-            </div>
-            <form id="requestForm" class="form-grid">
-                <label>
-                    Selected medicine
-                    <input id="requestDrug" name="drug" type="text" required />
-                </label>
-                <label>
-                    Facility name
-                    <input name="facility" type="text" placeholder="Your facility or clinic" required />
-                </label>
-                <label>
-                    Delivery location
-                    <input name="location" type="text" placeholder="Ward, address or pickup point" required />
-                </label>
-                <label>
-                    Contact person
-                    <input name="contactPerson" type="text" placeholder="Name of the requesting lead" required />
-                </label>
-                <label>
-                    Phone number
-                    <input name="phone" type="tel" placeholder="0712345678" required />
-                </label>
-                <label>
-                    Email address
-                    <input name="email" type="email" placeholder="contact@facility.org" required />
-                </label>
-                <label>
-                    Request details
-                    <textarea name="details"
-                        placeholder="Mention needed quantity, urgency and delivery notes"></textarea>
-                </label>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Submit request</button>
-                    <button type="button" class="btn btn-outline" id="cancelRequestModal">Cancel</button>
-                </div>
-            </form>
-            <p id="requestSuccess" class="demo-note hidden">Your request has been recorded. The supplying facility will
-                contact you soon.</p>
-        </div>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Dawa Track</strong>
+        <p>Helping facilities move medicine before it becomes waste.</p>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="about.html">About</a><br />
+        <a href="surplus.html">List surplus stock</a><br />
+        <a href="login.html">Facility login</a><br />
+        <a href="admin-login.html">Admin</a>
+      </div>
     </div>
-
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div>
-                <strong>Dawa Track</strong>
-                <p>Helping facilities move medicine before it becomes waste.</p>
-            </div>
-            <div>
-                <a href="browse.html">Browse medicine</a><br />
-                <a href="surplus.html">List surplus stock</a><br />
-                <a href="login.html">Facility login</a>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        const searchInput = document.getElementById('medicineSearch');
-        const searchBtn = document.getElementById('searchBtn');
-        const rows = Array.from(document.querySelectorAll('.medicine-row'));
-        const noResults = document.getElementById('noResults');
-        const modal = document.getElementById('requestModal');
-        const requestForm = document.getElementById('requestForm');
-        const requestDrug = document.getElementById('requestDrug');
-        const requestSuccess = document.getElementById('requestSuccess');
-
-        function filterRows() {
-            const query = searchInput.value.trim().toLowerCase();
-            let visibleCount = 0;
-
-            rows.forEach((row) => {
-                const haystack = `${row.dataset.name} ${row.dataset.facility} ${row.dataset.status}`.toLowerCase();
-                const matches = haystack.includes(query);
-                row.style.display = matches ? '' : 'none';
-                if (matches) visibleCount += 1;
-            });
-
-            noResults.hidden = visibleCount !== 0;
-        }
-
-        searchBtn.addEventListener('click', filterRows);
-        searchInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                filterRows();
-            }
-        });
-
-        document.querySelectorAll('.request-btn').forEach((button) => {
-            button.addEventListener('click', () => {
-                requestDrug.value = button.dataset.drug;
-                requestForm.reset();
-                requestDrug.value = button.dataset.drug;
-                requestSuccess.classList.add('hidden');
-                modal.classList.remove('hidden');
-                modal.setAttribute('aria-hidden', 'false');
-                document.querySelector('input[name="facility"]').focus();
-            });
-        });
-
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.setAttribute('aria-hidden', 'true');
-        }
-
-        document.getElementById('closeRequestModal').addEventListener('click', closeModal);
-        document.getElementById('cancelRequestModal').addEventListener('click', closeModal);
-
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) closeModal();
-        });
-
-        requestForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            requestSuccess.classList.remove('hidden');
-            setTimeout(closeModal, 1600);
-        });
-
-        filterRows();
-    </script>
+  </footer>
 </body>
 
 </html>

@@ -4,514 +4,234 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dawa Track — Before Expiry, Not After</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-    :root {
-      --bg: #F6F7F4;
-      --surface: #FFFFFF;
-      --ink: #122031;
-      --muted: #5B6673;
-      --line: #E3E6DF;
-      --teal: #0F7A6E;
-      --teal-dark: #0B5C53;
-      --teal-tint: #E4F3F0;
-      --amber: #C98A1F;
-      --amber-tint: #FBF0DD;
-      --red: #B23B2E;
-      --red-tint: #F9E7E3;
-      --green: #2E7D52;
-      --green-tint: #E6F2EA;
-      --navy: #0B2545;
-      --radius: 12px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 14.5px;
-      line-height: 1.6;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    h1,
-    h2,
-    h3 {
-      font-family: 'Space Grotesk', sans-serif;
-      margin: 0;
-    }
-
-    .mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .eyebrow {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--teal-dark);
-    }
-
-    .wrap {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 0 28px;
-    }
-
-    .nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--line);
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-
-    .nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 28px;
-      max-width: 1120px;
-      margin: 0 auto;
-    }
-
-    .logo {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo .dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--teal);
-      display: inline-block;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 26px;
-      font-weight: 600;
-      font-size: 13.5px;
-      color: var(--muted);
-    }
-
-    .nav-links a.active,
-    .nav-links a:hover {
-      color: var(--ink);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .btn {
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 13px;
-      border-radius: 8px;
-      padding: 9px 16px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      display: inline-block;
-    }
-
-    .btn.primary {
-      background: var(--teal);
-      color: #fff;
-    }
-
-    .btn.primary:hover {
-      background: var(--teal-dark);
-    }
-
-    .btn.outline {
-      background: transparent;
-      border-color: var(--line);
-      color: var(--ink);
-    }
-
-    .btn.outline:hover {
-      border-color: var(--teal);
-      color: var(--teal-dark);
-    }
-
-    .hero {
-      background: linear-gradient(180deg, #0E3B34 0%, var(--navy) 100%);
-      color: #fff;
-      padding: 56px 0 64px;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 40px;
-      align-items: center;
-    }
-
-    .hero h1 {
-      font-size: 38px;
-      line-height: 1.15;
-      margin-bottom: 14px;
-    }
-
-    .hero p.lead {
-      color: #CFE0DC;
-      font-size: 15.5px;
-      max-width: 480px;
-      margin-bottom: 24px;
-    }
-
-    .hero .cta-row {
-      display: flex;
-      gap: 12px;
-    }
-
-    .hero .btn.outline {
-      border-color: rgba(255, 255, 255, .35);
-      color: #fff;
-    }
-
-    .hero .btn.outline:hover {
-      border-color: #fff;
-    }
-
-    .urgent-card {
-      background: rgba(255, 255, 255, .06);
-      border: 1px solid rgba(255, 255, 255, .18);
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      backdrop-filter: blur(3px);
-    }
-
-    .urgent-card .eyebrow {
-      color: #9FD8CC;
-    }
-
-    .urgent-card .drug {
-      font-size: 19px;
-      font-weight: 700;
-      margin: 8px 0 2px;
-      font-family: 'Space Grotesk', sans-serif;
-    }
-
-    .urgent-card .meta {
-      color: #B9C9C4;
-      font-size: 12.5px;
-      margin-bottom: 14px;
-    }
-
-    .cd-big {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 30px;
-      font-weight: 600;
-      letter-spacing: .01em;
-    }
-
-    .cd-big.urgent {
-      color: #F3B0A3;
-    }
-
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--red);
-      display: inline-block;
-      margin-right: 7px;
-      animation: pulse 1.6s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(178, 59, 46, .55);
-      }
-
-      70% {
-        box-shadow: 0 0 0 9px rgba(178, 59, 46, 0);
-      }
-
-      100% {
-        box-shadow: 0 0 0 0 rgba(178, 59, 46, 0);
-      }
-    }
-
-    section {
-      padding: 52px 0;
-    }
-
-    .section-head {
-      margin-bottom: 26px;
-    }
-
-    .section-head h2 {
-      font-size: 24px;
-      margin-bottom: 6px;
-    }
-
-    .section-head p {
-      color: var(--muted);
-      font-size: 13.5px;
-      max-width: 560px;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
-    .step {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
-    }
-
-    .step .num {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--teal);
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .step h3 {
-      font-size: 14.5px;
-      margin: 8px 0 6px;
-    }
-
-    .step p {
-      color: var(--muted);
-      font-size: 12.5px;
-      margin: 0;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .feature {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-
-    .feature h3 {
-      font-size: 14.5px;
-      margin-bottom: 6px;
-    }
-
-    .feature p {
-      color: var(--muted);
-      font-size: 12.5px;
-      margin: 0;
-    }
-
-    .footer {
-      background: var(--navy);
-      color: #B9C9C4;
-      padding: 38px 0 26px;
-      margin-top: 20px;
-    }
-
-    .footer .wrap {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .footer .logo {
-      color: #fff;
-    }
-
-    .footer a {
-      color: #B9C9C4;
-      font-size: 13px;
-    }
-
-    .footer a:hover {
-      color: #fff;
-    }
-
-    .footer .cols {
-      display: flex;
-      gap: 60px;
-    }
-
-    .footer .col h4 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 12px;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-
-    .footer .col a {
-      display: block;
-      margin-bottom: 7px;
-    }
-
-    .footer .bottom {
-      border-top: 1px solid rgba(255, 255, 255, .12);
-      margin-top: 26px;
-      padding-top: 16px;
-      font-size: 11.5px;
-      color: #8AA099;
-    }
-
-    @media (max-width: 860px) {
-      .hero-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .steps,
-      .feature-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .nav-links {
-        display: none;
-      }
-    }
-  </style>
+  <title>Dawa Track — Browse available medicine</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="db.js"></script>
 </head>
 
 <body>
-  <div class="nav">
-    <div class="nav-inner">
+  <header class="site-header">
+    <nav class="navbar">
       <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
       <div class="nav-links">
-        <a href="index.html" class="active">Home</a>
-        <a href="browse.html">Browse medicine</a>
+        <a class="active" href="index.html">Home</a>
+        <a href="about.html">About</a>
         <a href="surplus.html">Surplus stock</a>
         <a href="login.html">Login</a>
       </div>
-      <div class="nav-right">
-        <a href="surplus.html" class="btn outline">List stock</a>
-      </div>
-    </div>
-  </div>
+      <a href="surplus.html" class="btn btn-primary">List stock</a>
+    </nav>
+  </header>
 
-  <main>
-    <div class="hero">
-      <div class="wrap hero-grid">
-        <div>
-          <span class="eyebrow" style="color:#9FD8CC">Facility-to-facility medicine coordination</span>
-          <h1>Before expiry, not after.</h1>
-          <p class="lead">Dawa Track helps hospitals and warehouses move short-dated medicine to where it is needed
-            most.</p>
-          <div class="cta-row">
-            <a href="browse.html" class="btn primary">Browse available medicine</a>
-            <a href="surplus.html" class="btn outline">List your surplus stock</a>
-          </div>
-        </div>
-        <div class="urgent-card">
-          <span class="eyebrow"><span class="pulse-dot"></span>Current priority</span>
-          <div class="drug">Amoxicillin 500mg</div>
-          <div class="meta">4,000 units available · near expiry · ready for review</div>
-          <div class="cd-big urgent">3d 12h</div>
-        </div>
-      </div>
-    </div>
-
-    <section class="wrap">
-      <div class="section-head">
-        <h2>How the platform works</h2>
-        <p>Facilities can browse available stock, list surplus medicine, and log in to manage requests from one place.
-        </p>
-      </div>
-      <div class="steps">
-        <div class="step">
-          <span class="num">01</span>
-          <h3>List surplus stock</h3>
-          <p>Hospitals and warehouses report medicine they cannot use in time.</p>
-        </div>
-        <div class="step">
-          <span class="num">02</span>
-          <h3>Browse available medicine</h3>
-          <p>Facilities see what is close to expiry and still suitable for transfer.</p>
-        </div>
-        <div class="step">
-          <span class="num">03</span>
-          <h3>Request or approve</h3>
-          <p>Request stock or approve incoming requests through the facility workflow.</p>
-        </div>
-        <div class="step">
-          <span class="num">04</span>
-          <h3>Track the handover</h3>
-          <p>Every transfer is logged for visibility and audit readiness.</p>
-        </div>
-      </div>
+  <main class="page">
+    <section class="hero-card">
+      <h1>Browse available medicine</h1>
+      <p>See stock that is close to expiry and ready for transfer between facilities.</p>
     </section>
 
-    <section class="wrap">
-      <div class="section-head">
-        <h2>Start here</h2>
-        <p>Choose the section that fits your goal.</p>
+    <section class="card">
+      <h2 class="section-title">Medicine available now</h2>
+      <p class="section-subtitle">Search by medicine name, facility or status and request stock directly.</p>
+      <div class="search-row">
+        <input id="medicineSearch" type="text" placeholder="Search medicine, facility or status" />
+        <button id="searchBtn" type="button" class="btn btn-primary">Search</button>
       </div>
-      <div class="feature-grid">
-        <div class="feature">
-          <h3>Browse medicine</h3>
-          <p>See current stock that is available for request.</p>
-          <p style="margin-top:10px;"><a href="browse.html" class="btn outline small">Open page</a></p>
-        </div>
-        <div class="feature">
-          <h3>List surplus stock</h3>
-          <p>Report stock you want to transfer before it expires.</p>
-          <p style="margin-top:10px;"><a href="surplus.html" class="btn outline small">Open page</a></p>
-        </div>
-        <div class="feature">
-          <h3>Facility login</h3>
-          <p>Sign in to manage listings, requests, and transfers.</p>
-          <p style="margin-top:10px;"><a href="login.html" class="btn outline small">Open page</a></p>
-        </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Quantity</th>
+              <th>Facility</th>
+              <th>Expiry</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="medicineTableBody"></tbody>
+        </table>
+        <p id="noResults" class="empty-state" hidden>No medicine matches your search yet.</p>
       </div>
     </section>
   </main>
 
-  <div class="footer">
-    <div class="wrap">
-      <div>
-        <div class="logo">Dawa Track</div>
-        <p style="max-width:240px;margin-top:10px;">A neutral platform coordinating medicine movement before it becomes
-          waste.</p>
+  <div id="requestModal" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Request medicine</h3>
+        <button type="button" class="modal-close" id="closeRequestModal" aria-label="Close request form">×</button>
       </div>
-      <div class="cols">
-        <div class="col">
-          <h4>Platform</h4>
-          <a href="browse.html">Browse medicine</a>
-          <a href="surplus.html">List surplus stock</a>
+      <form id="requestForm" class="form-grid">
+        <label>
+          Selected medicine
+          <input id="requestDrug" name="drug" type="text" required readonly />
+        </label>
+        <input id="requestSupplier" name="supplierFacility" type="hidden" />
+        <label>
+          Facility name
+          <input name="facility" type="text" placeholder="Your facility or clinic" required />
+        </label>
+        <label>
+          Delivery location
+          <input name="location" type="text" placeholder="Ward, address or pickup point" required />
+        </label>
+        <label>
+          Contact person
+          <input name="contactPerson" type="text" placeholder="Name of the requesting lead" required />
+        </label>
+        <label>
+          Phone number
+          <input name="phone" type="tel" placeholder="0712345678" required />
+        </label>
+        <label>
+          Email address
+          <input name="email" type="email" placeholder="contact@facility.org" required />
+        </label>
+        <label>
+          Request details
+          <textarea name="details" placeholder="Mention needed quantity, urgency and delivery notes"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit request</button>
+          <button type="button" class="btn btn-outline" id="cancelRequestModal">Cancel</button>
         </div>
-        <div class="col">
-          <h4>Access</h4>
-          <a href="login.html">Facility login</a>
-        </div>
+      </form>
+      <p id="requestSuccess" class="demo-note hidden">Your request has been recorded. The supplying facility will
+        contact you soon.</p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Dawa Track</strong>
+        <p>Helping facilities move medicine before it becomes waste.</p>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="about.html">About</a><br />
+        <a href="surplus.html">List surplus stock</a><br />
+        <a href="login.html">Facility login</a><br />
+        <a href="admin-login.html">Admin</a>
       </div>
     </div>
-    <div class="wrap bottom">© 2026 Dawa Track. Before expiry, not after.</div>
-  </div>
+  </footer>
+
+  <script>
+    const medicineSearch = document.getElementById('medicineSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const medicineTableBody = document.getElementById('medicineTableBody');
+    const noResults = document.getElementById('noResults');
+    const modal = document.getElementById('requestModal');
+    const requestForm = document.getElementById('requestForm');
+    const requestDrug = document.getElementById('requestDrug');
+    const requestSupplier = document.getElementById('requestSupplier');
+    const requestSuccess = document.getElementById('requestSuccess');
+
+    function getStatusClass(status) {
+      return status === 'ready' ? 'green' : status === 'monitor' ? 'amber' : 'gray';
+    }
+
+    function renderMedicineTable() {
+      const db = DawaDB.load();
+      const medicines = db.medicines.filter((item) => item.approval === 'approved');
+      medicineTableBody.innerHTML = medicines
+        .map((item) => `
+          <tr class="medicine-row" data-name="${item.drug.toLowerCase()}" data-facility="${item.facility.toLowerCase()}" data-status="${item.status.toLowerCase()}">
+            <td>${item.drug}</td>
+            <td>${item.quantity}</td>
+            <td>${item.facility}</td>
+            <td>${item.expiry}</td>
+            <td><span class="status-pill ${getStatusClass(item.status)}">${item.status === 'ready' ? 'Ready' : item.status === 'monitor' ? 'Monitor' : item.status}</span></td>
+            <td><button type="button" class="btn btn-outline request-btn" data-drug="${item.drug}" data-supplier="${item.facility}">Request</button></td>
+          </tr>
+        `)
+        .join('');
+
+      if (medicines.length === 0) {
+        medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No approved medicine listings are available yet.</td></tr>';
+      }
+
+      attachRequestButtons();
+      filterRows();
+    }
+
+    function attachRequestButtons() {
+      document.querySelectorAll('.request-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          requestDrug.value = button.dataset.drug;
+          requestSupplier.value = button.dataset.supplier;
+          requestForm.reset();
+          requestDrug.value = button.dataset.drug;
+          requestSuccess.classList.add('hidden');
+          modal.classList.remove('hidden');
+          modal.setAttribute('aria-hidden', 'false');
+          document.querySelector('input[name="facility"]').focus();
+        });
+      });
+    }
+
+    function filterRows() {
+      const query = medicineSearch.value.trim().toLowerCase();
+      const rows = Array.from(document.querySelectorAll('.medicine-row'));
+      let visibleCount = 0;
+
+      rows.forEach((row) => {
+        const haystack = `${row.dataset.name} ${row.dataset.facility} ${row.dataset.status}`.toLowerCase();
+        const matches = haystack.includes(query);
+        row.style.display = matches ? '' : 'none';
+        if (matches) visibleCount += 1;
+      });
+
+      noResults.hidden = visibleCount !== 0;
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    document.getElementById('closeRequestModal').addEventListener('click', closeModal);
+    document.getElementById('cancelRequestModal').addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    searchBtn.addEventListener('click', filterRows);
+    medicineSearch.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        filterRows();
+      }
+    });
+
+    requestForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(requestForm);
+      const db = DawaDB.load();
+      db.transferRequests.push({
+        id: DawaDB.uid('req'),
+        drug: formData.get('drug'),
+        supplierFacility: formData.get('supplierFacility'),
+        facility: formData.get('facility'),
+        deliveryLocation: formData.get('location'),
+        contactPerson: formData.get('contactPerson'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        details: formData.get('details'),
+        status: 'new',
+        timestamp: DawaDB.nowStamp(),
+      });
+      DawaDB.save(db);
+      requestSuccess.classList.remove('hidden');
+      requestForm.reset();
+      requestDrug.value = formData.get('drug');
+      setTimeout(closeModal, 1600);
+    });
+
+    renderMedicineTable();
+  </script>
 </body>
 
 </html>
