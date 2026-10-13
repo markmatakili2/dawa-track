@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dawa Track — Browse available medicine</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
   <script src="db.js"></script>
 </head>
 
@@ -32,6 +34,7 @@
     <section class="card">
       <h2 class="section-title">Medicine available now</h2>
       <p class="section-subtitle">Search by medicine name, facility or status and request stock directly.</p>
+      <p id="pageError" class="demo-note hidden" style="color: var(--red); margin-bottom: 12px;"></p>
       <div class="search-row">
         <input id="medicineSearch" type="text" placeholder="Search medicine, facility or status" />
         <button id="searchBtn" type="button" class="btn btn-primary">Search</button>
@@ -66,6 +69,7 @@
           Selected medicine
           <input id="requestDrug" name="drug" type="text" required readonly />
         </label>
+        <input id="requestMedicineId" name="medicineId" type="hidden" />
         <input id="requestSupplier" name="supplierFacility" type="hidden" />
         <label>
           Facility name
@@ -96,8 +100,8 @@
           <button type="button" class="btn btn-outline" id="cancelRequestModal">Cancel</button>
         </div>
       </form>
-      <p id="requestSuccess" class="demo-note hidden">Your request has been recorded. The supplying facility will
-        contact you soon.</p>
+      <p id="requestError" class="demo-note hidden" style="color: var(--red); margin-top: 12px;"></p>
+      <p id="requestSuccess" class="demo-note hidden">Your request has been recorded. The supplying facility will contact you soon.</p>
     </div>
   </div>
 
@@ -122,33 +126,45 @@
     const searchBtn = document.getElementById('searchBtn');
     const medicineTableBody = document.getElementById('medicineTableBody');
     const noResults = document.getElementById('noResults');
+    const pageError = document.getElementById('pageError');
     const modal = document.getElementById('requestModal');
     const requestForm = document.getElementById('requestForm');
     const requestDrug = document.getElementById('requestDrug');
+    const requestMedicineId = document.getElementById('requestMedicineId');
     const requestSupplier = document.getElementById('requestSupplier');
     const requestSuccess = document.getElementById('requestSuccess');
+    const requestError = document.getElementById('requestError');
+    let approvedMedicines = [];
 
     function getStatusClass(status) {
       return status === 'ready' ? 'green' : status === 'monitor' ? 'amber' : 'gray';
     }
 
+    function showPageError(message) {
+      pageError.textContent = message;
+      pageError.classList.remove('hidden');
+    }
+
+    function hidePageError() {
+      pageError.textContent = '';
+      pageError.classList.add('hidden');
+    }
+
     function renderMedicineTable() {
-      const db = DawaDB.load();
-      const medicines = db.medicines.filter((item) => item.approval === 'approved');
-      medicineTableBody.innerHTML = medicines
+      medicineTableBody.innerHTML = approvedMedicines
         .map((item) => `
           <tr class="medicine-row" data-name="${item.drug.toLowerCase()}" data-facility="${item.facility.toLowerCase()}" data-status="${item.status.toLowerCase()}">
             <td>${item.drug}</td>
-            <td>${item.quantity}</td>
+            <td>${item.quantityLabel || `${Number(item.quantity).toLocaleString('en-KE')} ${item.unit || 'units'}`}</td>
             <td>${item.facility}</td>
             <td>${item.expiry}</td>
             <td><span class="status-pill ${getStatusClass(item.status)}">${item.status === 'ready' ? 'Ready' : item.status === 'monitor' ? 'Monitor' : item.status}</span></td>
-            <td><button type="button" class="btn btn-outline request-btn" data-drug="${item.drug}" data-supplier="${item.facility}">Request</button></td>
+            <td><button type="button" class="btn btn-outline request-btn" data-medicine-id="${item.id}" data-drug="${item.drug}" data-supplier="${item.facility}">Request</button></td>
           </tr>
         `)
         .join('');
 
-      if (medicines.length === 0) {
+      if (approvedMedicines.length === 0) {
         medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No approved medicine listings are available yet.</td></tr>';
       }
 
@@ -160,10 +176,15 @@
       document.querySelectorAll('.request-btn').forEach((button) => {
         button.addEventListener('click', () => {
           requestDrug.value = button.dataset.drug;
+          requestMedicineId.value = button.dataset.medicineId;
           requestSupplier.value = button.dataset.supplier;
           requestForm.reset();
           requestDrug.value = button.dataset.drug;
+          requestMedicineId.value = button.dataset.medicineId;
+          requestSupplier.value = button.dataset.supplier;
           requestSuccess.classList.add('hidden');
+          requestError.classList.add('hidden');
+          requestError.textContent = '';
           modal.classList.remove('hidden');
           modal.setAttribute('aria-hidden', 'false');
           document.querySelector('input[name="facility"]').focus();
@@ -206,31 +227,53 @@
       }
     });
 
-    requestForm.addEventListener('submit', (event) => {
+    async function loadApprovedMedicines() {
+      hidePageError();
+      medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading medicine listings...</td></tr>';
+
+      try {
+        approvedMedicines = await DawaDB.getApprovedMedicines();
+        renderMedicineTable();
+      } catch (error) {
+        medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Unable to load medicine listings right now. Please try again.</td></tr>';
+        showPageError(error?.message || 'Unable to load medicine listings right now.');
+      }
+    }
+
+    requestForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      requestError.classList.add('hidden');
+      requestError.textContent = '';
+      requestSuccess.classList.add('hidden');
+
       const formData = new FormData(requestForm);
-      const db = DawaDB.load();
-      db.transferRequests.push({
-        id: DawaDB.uid('req'),
-        drug: formData.get('drug'),
-        supplierFacility: formData.get('supplierFacility'),
-        facility: formData.get('facility'),
-        deliveryLocation: formData.get('location'),
-        contactPerson: formData.get('contactPerson'),
+      const payload = {
+        medicine_id: requestMedicineId.value,
+        drug_name: requestDrug.value,
+        supplier_facility_name: requestSupplier.value,
+        requesting_facility: formData.get('facility'),
+        delivery_location: formData.get('location'),
+        contact_person: formData.get('contactPerson'),
         phone: formData.get('phone'),
         email: formData.get('email'),
-        details: formData.get('details'),
-        status: 'new',
-        timestamp: DawaDB.nowStamp(),
-      });
-      DawaDB.save(db);
-      requestSuccess.classList.remove('hidden');
-      requestForm.reset();
-      requestDrug.value = formData.get('drug');
-      setTimeout(closeModal, 1600);
+        details: formData.get('details') || '',
+      };
+
+      try {
+        await DawaDB.submitTransferRequest(payload);
+        requestForm.reset();
+        requestSuccess.classList.remove('hidden');
+        setTimeout(() => {
+          closeModal();
+          requestSuccess.classList.add('hidden');
+        }, 2600);
+      } catch (error) {
+        requestError.textContent = error?.message || 'Unable to submit your request right now.';
+        requestError.classList.remove('hidden');
+      }
     });
 
-    renderMedicineTable();
+    loadApprovedMedicines();
   </script>
 </body>
 

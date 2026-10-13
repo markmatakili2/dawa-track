@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Login | Dawa Track</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+    <script src="config.js"></script>
     <script src="db.js"></script>
 </head>
 
@@ -30,11 +32,11 @@
             <form id="adminLoginForm" class="form-grid">
                 <label>
                     Email address
-                    <input type="email" id="adminEmail" name="email" value="admin@dawatrack.org" required />
+                    <input type="email" id="adminEmail" name="email" required />
                 </label>
                 <label>
                     Password
-                    <input type="password" id="adminPassword" name="password" value="admin1234" required />
+                    <input type="password" id="adminPassword" name="password" required />
                 </label>
                 <div id="adminError" class="demo-note hidden" style="color: var(--red);"></div>
                 <div class="form-actions">
@@ -49,7 +51,7 @@
         <div class="footer-inner">
             <div>
                 <strong>Dawa Track</strong>
-                <p>Admin access is client-side only for this static demo.</p>
+                <p>Admin access is secured through Supabase authentication.</p>
             </div>
             <div>
                 <a href="index.html">Home</a><br />
@@ -65,15 +67,19 @@
         const adminLoginForm = document.getElementById('adminLoginForm');
         const adminError = document.getElementById('adminError');
 
-        adminLoginForm.addEventListener('submit', (event) => {
+        adminLoginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
+            adminError.textContent = '';
+            adminError.classList.add('hidden');
+
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
-            if (email === 'admin@dawatrack.org' && password === 'admin1234') {
-                sessionStorage.setItem('dawaAdminAuth', 'true');
+
+            try {
+                await DawaDB.signInAdmin(email, password);
                 window.location.href = 'admin-dashboard.html';
-            } else {
-                adminError.textContent = 'Invalid admin credentials. Please try again.';
+            } catch (error) {
+                adminError.textContent = "incorrect email or password, or this account isn't authorized";
                 adminError.classList.remove('hidden');
             }
         });

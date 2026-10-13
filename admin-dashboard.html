@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dawa Track Admin</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+    <script src="config.js"></script>
     <script src="db.js"></script>
     <style>
         .topbar {
@@ -166,6 +168,35 @@
             color: var(--amber);
         }
 
+        .badge.rejected {
+            background: #fde8e8;
+            color: var(--red);
+        }
+
+        .status-banner {
+            margin: 18px 28px 0;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status-banner.visible {
+            display: block;
+        }
+
+        .status-banner.success {
+            background: var(--green-tint);
+            color: var(--green);
+            border: 1px solid rgba(0, 152, 116, 0.15);
+        }
+
+        .status-banner.error {
+            background: #fff1f1;
+            color: var(--red);
+            border: 1px solid rgba(214, 76, 76, 0.15);
+        }
+
         .form-grid {
             display: grid;
             gap: 14px;
@@ -233,337 +264,408 @@
         <button class="logout-btn" id="logoutButton">Log out</button>
     </div>
 
+    <div id="adminStatus" class="status-banner" role="status" aria-live="polite"></div>
+
     <div class="shell">
         <aside class="sidebar" id="sidebar"></aside>
         <main class="main" id="main"></main>
     </div>
 
     <script>
-        if (sessionStorage.getItem('dawaAdminAuth') !== 'true') {
-            window.location.href = 'admin-login.html';
-        }
+        (async function () {
+            const tabs = [
+                { id: 'overview', label: 'Overview' },
+                { id: 'facilities', label: 'Facilities' },
+                { id: 'medicine', label: 'Medicine Listings' },
+                { id: 'requests', label: 'Transfer Requests' },
+            ];
 
-        const tabs = [
-            { id: 'overview', label: 'Overview' },
-            { id: 'facilities', label: 'Facilities' },
-            { id: 'medicine', label: 'Medicine Listings' },
-            { id: 'requests', label: 'Transfer Requests' },
-        ];
+            let activeTab = 'overview';
 
-        let activeTab = 'overview';
+            function setStatus(message, tone = 'info') {
+                const status = document.getElementById('adminStatus');
+                status.textContent = message || '';
+                status.className = `status-banner ${tone === 'error' ? 'error' : tone === 'success' ? 'success' : ''} ${message ? 'visible' : ''}`.trim();
+            }
 
-        function renderSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.innerHTML = tabs
-                .map((tab) => `<div class="nav-item${tab.id === activeTab ? ' active' : ''}" data-tab="${tab.id}">${tab.label}</div>`)
-                .join('');
-            sidebar.querySelectorAll('.nav-item').forEach((item) => {
-                item.addEventListener('click', () => {
-                    activeTab = item.dataset.tab;
-                    render();
+            function renderSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.innerHTML = tabs
+                    .map((tab) => `<div class="nav-item${tab.id === activeTab ? ' active' : ''}" data-tab="${tab.id}">${tab.label}</div>`)
+                    .join('');
+
+                sidebar.querySelectorAll('.nav-item').forEach((item) => {
+                    item.addEventListener('click', () => {
+                        activeTab = item.dataset.tab;
+                        renderMain();
+                    });
                 });
+            }
+
+            async function fetchDashboardData() {
+                const [facilities, medicines, transferRequests] = await Promise.all([
+                    DawaDB.getFacilities(),
+                    DawaDB.getAllMedicines(),
+                    DawaDB.getTransferRequests(),
+                ]);
+
+                return { facilities, medicines, transferRequests };
+            }
+
+            async function renderMain() {
+                renderSidebar();
+                const main = document.getElementById('main');
+
+                try {
+                    const data = await fetchDashboardData();
+                    const approvedCount = data.medicines.filter((item) => item.approval === 'approved').length;
+                    const pendingCount = data.medicines.filter((item) => item.approval === 'pending').length;
+                    const openRequests = data.transferRequests.filter((request) => request.status !== 'resolved').length;
+
+                    if (activeTab === 'overview') {
+                        main.innerHTML = `
+                        <div class="section-header">
+                            <div>
+                                <h1>Overview</h1>
+                                <p class="small-note">Live counts from the connected Supabase database.</p>
+                            </div>
+                        </div>
+                        <div class="card-list">
+                            <div class="metric-card">
+                                <div class="metric-label">Facilities</div>
+                                <div class="metric-value">${data.facilities.length}</div>
+                                <p>Registered facilities in the system.</p>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Approved listings</div>
+                                <div class="metric-value">${approvedCount}</div>
+                                <p>Medicine listings visible on the home page.</p>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Pending approvals</div>
+                                <div class="metric-value">${pendingCount}</div>
+                                <p>Surplus listings waiting for admin review.</p>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Open requests</div>
+                                <div class="metric-value">${openRequests}</div>
+                                <p>Transfer requests that still need processing.</p>
+                            </div>
+                        </div>
+                        `;
+                    }
+
+                    if (activeTab === 'facilities') {
+                        main.innerHTML = `
+                        <div class="section-header">
+                            <div>
+                                <h1>Facilities</h1>
+                                <p class="small-note">Manage registered facilities and add new partners.</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <table class="wide-table">
+                                <thead>
+                                    <tr><th>Name</th><th>County</th><th>Contact person</th><th>Phone</th><th>Email</th><th>Action</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${data.facilities
+                                        .map((facility) => `
+                                            <tr>
+                                                <td>${facility.name}</td>
+                                                <td>${facility.county || '-'}</td>
+                                                <td>${facility.contactPerson || '-'}</td>
+                                                <td>${facility.phone ? `<a href="tel:${facility.phone}">${facility.phone}</a>` : '-'}</td>
+                                                <td>${facility.email ? `<a href="mailto:${facility.email}">${facility.email}</a>` : '-'}</td>
+                                                <td><button class="btn btn-outline remove-facility" data-id="${facility.id}">Remove</button></td>
+                                            </tr>
+                                        `)
+                                        .join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card">
+                            <h3>Add facility</h3>
+                            <form id="facilityForm" class="form-grid small">
+                                <label class="field">
+                                    Name
+                                    <input name="name" required />
+                                </label>
+                                <label class="field">
+                                    County
+                                    <input name="county" />
+                                </label>
+                                <label class="field">
+                                    Contact person
+                                    <input name="contactPerson" />
+                                </label>
+                                <label class="field">
+                                    Phone
+                                    <input name="phone" type="tel" />
+                                </label>
+                                <label class="field">
+                                    Email
+                                    <input name="email" type="email" />
+                                </label>
+                                <div class="form-actions" style="grid-column: span 2;">
+                                    <button type="submit" class="btn btn-primary">Add facility</button>
+                                </div>
+                            </form>
+                        </div>
+                        `;
+
+                        document.getElementById('facilityForm').addEventListener('submit', async (event) => {
+                            event.preventDefault();
+                            const formData = new FormData(event.target);
+                            const payload = {
+                                name: formData.get('name'),
+                                county: formData.get('county'),
+                                contactPerson: formData.get('contactPerson'),
+                                phone: formData.get('phone'),
+                                email: formData.get('email'),
+                            };
+
+                            try {
+                                await DawaDB.addFacility(payload);
+                                event.target.reset();
+                                setStatus('Facility added.', 'success');
+                                await renderMain();
+                            } catch (error) {
+                                setStatus(error?.message || 'Unable to add the facility.', 'error');
+                            }
+                        });
+
+                        document.querySelectorAll('.remove-facility').forEach((button) => {
+                            button.addEventListener('click', async () => {
+                                try {
+                                    await DawaDB.removeFacility(button.dataset.id);
+                                    setStatus('Facility removed.', 'success');
+                                    await renderMain();
+                                } catch (error) {
+                                    setStatus(error?.message || 'Unable to remove the facility.', 'error');
+                                }
+                            });
+                        });
+                    }
+
+                    if (activeTab === 'medicine') {
+                        main.innerHTML = `
+                        <div class="section-header">
+                            <div>
+                                <h1>Medicine Listings</h1>
+                                <p class="small-note">Approve pending stock and manage active listings.</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <table class="wide-table">
+                                <thead>
+                                    <tr><th>Drug</th><th>Qty</th><th>Facility</th><th>Expiry</th><th>Status</th><th>Action</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${data.medicines
+                                        .map((item) => {
+                                            const actions = item.approval === 'pending'
+                                                ? `<button class="btn btn-primary approve-listing" data-id="${item.id}">Approve</button> <button class="btn btn-outline reject-listing" data-id="${item.id}">Reject</button>`
+                                                : `<button class="btn btn-outline remove-listing" data-id="${item.id}">Remove</button>`;
+                                            return `
+                                                <tr>
+                                                    <td>${item.drug}</td>
+                                                    <td>${item.quantityLabel || `${Number(item.quantity).toLocaleString('en-KE')} ${item.unit || 'units'}`}</td>
+                                                    <td>${item.facility}</td>
+                                                    <td>${item.expiry}</td>
+                                                    <td><span class="badge ${item.approval === 'approved' ? 'approved' : item.approval === 'rejected' ? 'rejected' : 'pending'}">${item.approval === 'approved' ? 'Approved' : item.approval === 'rejected' ? 'Rejected' : 'Pending'}</span></td>
+                                                    <td>${actions}</td>
+                                                </tr>
+                                            `;
+                                        })
+                                        .join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card">
+                            <h3>Add listing</h3>
+                            <form id="medicineForm" class="form-grid small">
+                                <label class="field">
+                                    Drug name
+                                    <input name="drug" required />
+                                </label>
+                                <label class="field">
+                                    Quantity
+                                    <input name="quantity" type="number" required />
+                                </label>
+                                <label class="field">
+                                    Facility
+                                    <input name="facility" required />
+                                </label>
+                                <label class="field">
+                                    Expiry
+                                    <input name="expiry" type="date" required />
+                                </label>
+                                <label class="field">
+                                    Status
+                                    <select name="status">
+                                        <option value="ready">Ready</option>
+                                        <option value="monitor">Monitor</option>
+                                    </select>
+                                </label>
+                                <div class="form-actions" style="grid-column: span 2;">
+                                    <button type="submit" class="btn btn-primary">Add approved listing</button>
+                                </div>
+                            </form>
+                        </div>
+                        `;
+
+                        document.getElementById('medicineForm').addEventListener('submit', async (event) => {
+                            event.preventDefault();
+                            const formData = new FormData(event.target);
+                            const payload = {
+                                drug: formData.get('drug'),
+                                quantity: formData.get('quantity'),
+                                facility: formData.get('facility'),
+                                expiry: formData.get('expiry'),
+                                status: formData.get('status'),
+                            };
+
+                            try {
+                                await DawaDB.adminAddMedicine(payload);
+                                event.target.reset();
+                                setStatus('Listing added.', 'success');
+                                await renderMain();
+                            } catch (error) {
+                                setStatus(error?.message || 'Unable to add the listing.', 'error');
+                            }
+                        });
+
+                        document.querySelectorAll('.approve-listing').forEach((button) => {
+                            button.addEventListener('click', async () => {
+                                try {
+                                    await DawaDB.approveMedicine(button.dataset.id);
+                                    setStatus('Listing approved.', 'success');
+                                    await renderMain();
+                                } catch (error) {
+                                    setStatus(error?.message || 'Unable to approve the listing.', 'error');
+                                }
+                            });
+                        });
+
+                        document.querySelectorAll('.reject-listing').forEach((button) => {
+                            button.addEventListener('click', async () => {
+                                try {
+                                    await DawaDB.rejectMedicine(button.dataset.id);
+                                    setStatus('Listing rejected.', 'success');
+                                    await renderMain();
+                                } catch (error) {
+                                    setStatus(error?.message || 'Unable to reject the listing.', 'error');
+                                }
+                            });
+                        });
+
+                        document.querySelectorAll('.remove-listing').forEach((button) => {
+                            button.addEventListener('click', async () => {
+                                try {
+                                    await DawaDB.removeMedicine(button.dataset.id);
+                                    setStatus('Listing removed.', 'success');
+                                    await renderMain();
+                                } catch (error) {
+                                    setStatus(error?.message || 'Unable to remove the listing.', 'error');
+                                }
+                            });
+                        });
+                    }
+
+                    if (activeTab === 'requests') {
+                        main.innerHTML = `
+                        <div class="section-header">
+                            <div>
+                                <h1>Transfer Requests</h1>
+                                <p class="small-note">Track all requests submitted from the home page.</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <table class="wide-table">
+                                <thead>
+                                    <tr><th>Drug</th><th>Requesting facility</th><th>Delivery location</th><th>Contact</th><th>Details</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${data.transferRequests
+                                        .map((request) => {
+                                            const contact = `<a href="tel:${request.phone}">${request.phone}</a><br><a href="mailto:${request.email}">${request.email}</a>`;
+                                            const actions = request.status === 'resolved'
+                                                ? '<span class="small-note">Resolved</span>'
+                                                : `<button class="btn btn-primary contacted-request" data-id="${request.id}">Mark as contacted</button> <button class="btn btn-outline resolved-request" data-id="${request.id}">Mark as resolved</button>`;
+                                            return `
+                                                <tr>
+                                                    <td>${request.drug}</td>
+                                                    <td>${request.facility}</td>
+                                                    <td>${request.deliveryLocation}</td>
+                                                    <td>${contact}</td>
+                                                    <td>${request.details || '-'}</td>
+                                                    <td>${request.submittedAt ? new Date(request.submittedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                                                    <td><span class="badge ${request.status === 'new' ? 'new' : request.status === 'contacted' ? 'contacted' : 'resolved'}">${request.status}</span></td>
+                                                    <td>${actions}</td>
+                                                </tr>
+                                            `;
+                                        })
+                                        .join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        `;
+
+                        document.querySelectorAll('.contacted-request').forEach((button) => {
+                            button.addEventListener('click', async () => {
+                                try {
+                                    await DawaDB.updateTransferRequestStatus(button.dataset.id, 'contacted');
+                                    setStatus('Request marked as contacted.', 'success');
+                                    await renderMain();
+                                } catch (error) {
+                                    setStatus(error?.message || 'Unable to update the request.', 'error');
+                                }
+                            });
+                        });
+
+                        document.querySelectorAll('.resolved-request').forEach((button) => {
+                            button.addEventListener('click', async () => {
+                                try {
+                                    await DawaDB.updateTransferRequestStatus(button.dataset.id, 'resolved');
+                                    setStatus('Request marked as resolved.', 'success');
+                                    await renderMain();
+                                } catch (error) {
+                                    setStatus(error?.message || 'Unable to update the request.', 'error');
+                                }
+                            });
+                        });
+                    }
+                } catch (error) {
+                    setStatus(error?.message || 'Unable to load the dashboard.', 'error');
+                    main.innerHTML = `
+                        <div class="section-header">
+                            <div>
+                                <h1>Dashboard unavailable</h1>
+                                <p class="small-note">The dashboard could not load its data. Please sign in again or check the Supabase configuration.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('logoutButton').addEventListener('click', async () => {
+                try {
+                    await DawaDB.signOutAdmin();
+                } catch (error) {
+                    // Ignore sign-out errors and redirect anyway so the user can return to the login screen.
+                }
+                window.location.href = 'admin-login.html';
             });
-        }
 
-        function loadDB() {
-            return DawaDB.load();
-        }
-
-        function saveDB(db) {
-            DawaDB.save(db);
-        }
-
-        function render() {
-            renderSidebar();
-            const db = loadDB();
-            const main = document.getElementById('main');
-
-            if (activeTab === 'overview') {
-                const approvedCount = db.medicines.filter((item) => item.approval === 'approved').length;
-                const pendingCount = db.medicines.filter((item) => item.approval === 'pending').length;
-                const openRequests = db.transferRequests.filter((request) => request.status !== 'resolved').length;
-                main.innerHTML = `
-          <div class="section-header">
-            <div>
-              <h1>Overview</h1>
-              <p class="small-note">Live counts from the shared DawaDB data layer.</p>
-            </div>
-          </div>
-          <div class="stats-grid">
-            <div class="metric-card">
-              <div class="metric-label">Facilities</div>
-              <div class="metric-value">${db.facilities.length}</div>
-              <p>Registered facilities in the system.</p>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Approved listings</div>
-              <div class="metric-value">${approvedCount}</div>
-              <p>Medicine listings visible on the home page.</p>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Pending approvals</div>
-              <div class="metric-value">${pendingCount}</div>
-              <p>Surplus listings waiting for admin review.</p>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Open requests</div>
-              <div class="metric-value">${openRequests}</div>
-              <p>Transfer requests that still need processing.</p>
-            </div>
-          </div>
-        `;
+            const session = await DawaDB.getAdminSession();
+            if (!session) {
+                window.location.href = 'admin-login.html';
+                return;
             }
 
-            if (activeTab === 'facilities') {
-                main.innerHTML = `
-          <div class="section-header">
-            <div>
-              <h1>Facilities</h1>
-              <p class="small-note">Manage registered facilities and add new partners.</p>
-            </div>
-          </div>
-          <div class="card">
-            <table class="wide-table">
-              <thead>
-                <tr><th>Name</th><th>County</th><th>Contact person</th><th>Phone</th><th>Email</th><th>Action</th></tr>
-              </thead>
-              <tbody>${db.facilities
-                        .map((facility) => `
-                  <tr>
-                    <td>${facility.name}</td>
-                    <td>${facility.county}</td>
-                    <td>${facility.contactPerson || '-'}</td>
-                    <td>${facility.phone || '-'}</td>
-                    <td>${facility.email || '-'}</td>
-                    <td><button class="btn btn-outline remove-facility" data-id="${facility.id}">Remove</button></td>
-                  </tr>
-                `)
-                        .join('')}</tbody>
-            </table>
-          </div>
-          <div class="card">
-            <h3>Add facility</h3>
-            <form id="facilityForm" class="form-grid small">
-              <label class="field">
-                Name
-                <input name="name" required />
-              </label>
-              <label class="field">
-                County
-                <input name="county" required />
-              </label>
-              <label class="field">
-                Contact person
-                <input name="contactPerson" />
-              </label>
-              <label class="field">
-                Phone
-                <input name="phone" type="tel" />
-              </label>
-              <label class="field">
-                Email
-                <input name="email" type="email" />
-              </label>
-              <div class="form-actions" style="grid-column: span 2;">
-                <button type="submit" class="btn btn-primary">Add facility</button>
-              </div>
-            </form>
-          </div>
-        `;
-                document.getElementById('facilityForm').addEventListener('submit', (event) => {
-                    event.preventDefault();
-                    const formData = new FormData(event.target);
-                    db.facilities.push({
-                        id: DawaDB.uid('fac'),
-                        name: formData.get('name'),
-                        county: formData.get('county'),
-                        contactPerson: formData.get('contactPerson'),
-                        phone: formData.get('phone'),
-                        email: formData.get('email'),
-                    });
-                    saveDB(db);
-                    render();
-                });
-                document.querySelectorAll('.remove-facility').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const id = button.dataset.id;
-                        db.facilities = db.facilities.filter((item) => item.id !== id);
-                        saveDB(db);
-                        render();
-                    });
-                });
-            }
-
-            if (activeTab === 'medicine') {
-                main.innerHTML = `
-          <div class="section-header">
-            <div>
-              <h1>Medicine Listings</h1>
-              <p class="small-note">Approve pending stock and manage active listings.</p>
-            </div>
-          </div>
-          <div class="card">
-            <table class="wide-table">
-              <thead>
-                <tr><th>Drug</th><th>Qty</th><th>Facility</th><th>Expiry</th><th>Status</th><th>Action</th></tr>
-              </thead>
-              <tbody>${db.medicines
-                        .map((item) => {
-                            const actions = item.approval === 'pending'
-                                ? `<button class="btn btn-primary approve-listing" data-id="${item.id}">Approve</button> <button class="btn btn-outline reject-listing" data-id="${item.id}">Reject</button>`
-                                : `<button class="btn btn-outline remove-listing" data-id="${item.id}">Remove</button>`;
-                            return `
-                    <tr>
-                      <td>${item.drug}</td>
-                      <td>${item.quantity}</td>
-                      <td>${item.facility}</td>
-                      <td>${item.expiry}</td>
-                      <td><span class="badge ${item.approval === 'approved' ? 'approved' : 'pending'}">${item.approval === 'approved' ? 'Approved' : 'Pending'}</span></td>
-                      <td>${actions}</td>
-                    </tr>
-                  `;
-                        })
-                        .join('')}</tbody>
-            </table>
-          </div>
-          <div class="card">
-            <h3>Add listing</h3>
-            <form id="medicineForm" class="form-grid small">
-              <label class="field">
-                Drug name
-                <input name="drug" required />
-              </label>
-              <label class="field">
-                Quantity
-                <input name="quantity" required />
-              </label>
-              <label class="field">
-                Facility
-                <input name="facility" required />
-              </label>
-              <label class="field">
-                Expiry
-                <input name="expiry" required />
-              </label>
-              <label class="field">
-                Status
-                <select name="status">
-                  <option value="ready">Ready</option>
-                  <option value="monitor">Monitor</option>
-                </select>
-              </label>
-              <div class="form-actions" style="grid-column: span 2;">
-                <button type="submit" class="btn btn-primary">Add approved listing</button>
-              </div>
-            </form>
-          </div>
-        `;
-                document.getElementById('medicineForm').addEventListener('submit', (event) => {
-                    event.preventDefault();
-                    const formData = new FormData(event.target);
-                    db.medicines.push({
-                        id: DawaDB.uid('med'),
-                        drug: formData.get('drug'),
-                        quantity: formData.get('quantity'),
-                        facility: formData.get('facility'),
-                        expiry: formData.get('expiry'),
-                        status: formData.get('status'),
-                        approval: 'approved',
-                    });
-                    saveDB(db);
-                    render();
-                });
-                document.querySelectorAll('.approve-listing').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const item = db.medicines.find((row) => row.id === button.dataset.id);
-                        if (item) {
-                            item.approval = 'approved';
-                            saveDB(db);
-                            render();
-                        }
-                    });
-                });
-                document.querySelectorAll('.reject-listing').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        db.medicines = db.medicines.filter((row) => row.id !== button.dataset.id);
-                        saveDB(db);
-                        render();
-                    });
-                });
-                document.querySelectorAll('.remove-listing').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        db.medicines = db.medicines.filter((row) => row.id !== button.dataset.id);
-                        saveDB(db);
-                        render();
-                    });
-                });
-            }
-
-            if (activeTab === 'requests') {
-                main.innerHTML = `
-          <div class="section-header">
-            <div>
-              <h1>Transfer Requests</h1>
-              <p class="small-note">Track all requests submitted from the home page.</p>
-            </div>
-          </div>
-          <div class="card">
-            <table class="wide-table">
-              <thead>
-                <tr><th>Drug</th><th>Requesting facility</th><th>Delivery location</th><th>Contact</th><th>Details</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
-              </thead>
-              <tbody>${db.transferRequests
-                        .map((request) => {
-                            const contact = `<a href="tel:${request.phone}">${request.phone}</a><br><a href="mailto:${request.email}">${request.email}</a>`;
-                            const actions = request.status === 'resolved'
-                                ? '<span class="small-note">Resolved</span>'
-                                : `<button class="btn btn-primary contacted-request" data-id="${request.id}">Mark as contacted</button> <button class="btn btn-outline resolved-request" data-id="${request.id}">Mark as resolved</button>`;
-                            return `
-                    <tr>
-                      <td>${request.drug}</td>
-                      <td>${request.facility}</td>
-                      <td>${request.deliveryLocation}</td>
-                      <td>${contact}</td>
-                      <td>${request.details || '-'}</td>
-                      <td>${request.timestamp}</td>
-                      <td><span class="badge ${request.status === 'new' ? 'new' : request.status === 'contacted' ? 'contacted' : 'resolved'}">${request.status}</span></td>
-                      <td>${actions}</td>
-                    </tr>
-                  `;
-                        })
-                        .join('')}</tbody>
-            </table>
-          </div>
-        `;
-                document.querySelectorAll('.contacted-request').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const request = db.transferRequests.find((row) => row.id === button.dataset.id);
-                        if (request && request.status !== 'resolved') {
-                            request.status = 'contacted';
-                            saveDB(db);
-                            render();
-                        }
-                    });
-                });
-                document.querySelectorAll('.resolved-request').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const request = db.transferRequests.find((row) => row.id === button.dataset.id);
-                        if (request) {
-                            request.status = 'resolved';
-                            saveDB(db);
-                            render();
-                        }
-                    });
-                });
-            }
-        }
-
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            sessionStorage.removeItem('dawaAdminAuth');
-            window.location.href = 'admin-login.html';
-        });
-
-        render();
+            renderMain();
+        })();
     </script>
 </body>
 
