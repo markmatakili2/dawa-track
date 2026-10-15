@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="db.js"></script>
+  <script id="turnstileScript" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -44,12 +45,31 @@
             <input type="password" id="password" name="password" autocomplete="current-password" required />
           </label>
           <a id="forgotPassword" href="#" class="text-link">Forgot password?</a>
+          <p class="notice notice-warning captcha-warning" data-captcha-warning hidden>CAPTCHA is not configured. Set TURNSTILE_SITE_KEY to enable sign-in verification.</p>
+          <div id="loginCaptcha" class="turnstile-widget" data-turnstile-widget aria-label="Sign-in verification"></div>
           <p id="loginError" class="notice notice-error" role="alert" hidden></p>
-          <p id="resetMessage" class="notice notice-success" role="status" hidden></p>
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Log in</button>
+            <button id="loginButton" type="submit" class="btn btn-primary" disabled>Log in</button>
           </div>
         </form>
+
+        <section id="resetPanel" aria-labelledby="resetHeading" hidden>
+          <h2 id="resetHeading">Reset your password</h2>
+          <p class="section-subtitle">Enter your account email and complete verification.</p>
+          <form id="resetForm" class="form-grid">
+            <label>Email address
+              <input type="email" id="resetEmail" name="email" autocomplete="email" required />
+            </label>
+            <p class="notice notice-warning captcha-warning" data-captcha-warning hidden>CAPTCHA is not configured. Set TURNSTILE_SITE_KEY to enable password reset verification.</p>
+            <div id="resetCaptcha" class="turnstile-widget" data-turnstile-widget aria-label="Password reset verification"></div>
+            <p id="resetError" class="notice notice-error" role="alert" hidden></p>
+            <p id="resetMessage" class="notice notice-success" role="status" hidden></p>
+            <div class="form-actions">
+              <button id="resetButton" type="submit" class="btn btn-primary" disabled>Send reset email</button>
+              <button id="cancelReset" type="button" class="btn btn-outline">Back to login</button>
+            </div>
+          </form>
+        </section>
       </section>
 
       <section id="signupPanel" role="tabpanel" aria-labelledby="signupTab" hidden>
@@ -107,10 +127,12 @@
             </label>
           </fieldset>
 
+          <p class="notice notice-warning captcha-warning grid-full" data-captcha-warning hidden>CAPTCHA is not configured. Set TURNSTILE_SITE_KEY to enable account registration verification.</p>
+          <div id="signupCaptcha" class="turnstile-widget grid-full" data-turnstile-widget aria-label="Account registration verification"></div>
           <p id="signupError" class="notice notice-error grid-full" role="alert" hidden></p>
           <p id="signupSuccess" class="notice notice-success grid-full" role="status" hidden>Account created. Check your email to confirm your address, then log in. Your facility will be able to view listings now, and request or list stock once an administrator verifies it.</p>
           <div class="form-actions grid-full">
-            <button id="signupButton" type="submit" class="btn btn-primary">Create account</button>
+            <button id="signupButton" type="submit" class="btn btn-primary" disabled>Create account</button>
           </div>
         </form>
       </section>
@@ -139,10 +161,81 @@
     const signupPanel = document.getElementById('signupPanel');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
+    const resetForm = document.getElementById('resetForm');
+    const resetPanel = document.getElementById('resetPanel');
     const loginError = document.getElementById('loginError');
     const signupError = document.getElementById('signupError');
+    const resetError = document.getElementById('resetError');
     const signupSuccess = document.getElementById('signupSuccess');
+    const captchaTokens = { login: '', signup: '', reset: '' };
+    const captchaWidgets = { login: undefined, signup: undefined, reset: undefined };
+    const captchaButtons = {
+      login: document.getElementById('loginButton'),
+      signup: document.getElementById('signupButton'),
+      reset: document.getElementById('resetButton'),
+    };
+    let turnstileLoaded = Boolean(window.turnstile);
     const signupButton = document.getElementById('signupButton');
+
+    function setCaptchaToken(formName, token) {
+      captchaTokens[formName] = token || '';
+      captchaButtons[formName].disabled = !captchaTokens[formName];
+    }
+
+    function showCaptchaWarnings(message) {
+      document.querySelectorAll('[data-captcha-warning]').forEach((warning) => {
+        warning.textContent = message;
+        warning.hidden = false;
+      });
+    }
+
+    function initializeCaptcha(formName) {
+      const siteKey = String(window.DAWA_TURNSTILE_SITE_KEY || '').trim();
+      if (!siteKey) {
+        showCaptchaWarnings('CAPTCHA is not configured. Set TURNSTILE_SITE_KEY in the build environment and config.js.');
+        return;
+      }
+      if (!turnstileLoaded || captchaWidgets[formName] !== undefined) return;
+      const widgetElement = document.getElementById(`${formName}Captcha`);
+      widgetElement.dataset.sitekey = siteKey;
+      captchaWidgets[formName] = window.turnstile.render(widgetElement, {
+        sitekey: widgetElement.dataset.sitekey,
+        callback: (token) => setCaptchaToken(formName, token),
+        'expired-callback': () => setCaptchaToken(formName, ''),
+        'error-callback': () => {
+          setCaptchaToken(formName, '');
+          const errors = { login: loginError, signup: signupError, reset: resetError };
+          errors[formName].textContent = 'Verification could not be completed. Please try again.';
+          errors[formName].hidden = false;
+        },
+      });
+    }
+
+    function initializeVisibleCaptcha() {
+      if (!String(window.DAWA_TURNSTILE_SITE_KEY || '').trim()) {
+        showCaptchaWarnings('CAPTCHA is not configured. Set TURNSTILE_SITE_KEY in the build environment and config.js.');
+        return;
+      }
+      document.querySelectorAll('[data-captcha-warning]').forEach((warning) => { warning.hidden = true; });
+      if (!loginPanel.hidden && !resetPanel.hidden) initializeCaptcha('reset');
+      else if (!loginPanel.hidden) initializeCaptcha('login');
+      if (!signupPanel.hidden) initializeCaptcha('signup');
+    }
+
+    function resetCaptcha(formName) {
+      setCaptchaToken(formName, '');
+      if (window.turnstile && captchaWidgets[formName] !== undefined) {
+        window.turnstile.reset(captchaWidgets[formName]);
+      }
+    }
+
+    function requireCaptcha(formName, errorElement) {
+      if (captchaTokens[formName]) return true;
+      errorElement.textContent = 'Please complete the verification.';
+      errorElement.hidden = false;
+      resetCaptcha(formName);
+      return false;
+    }
 
     function setActiveTab(tab) {
       const showSignup = tab === 'signup';
@@ -152,6 +245,7 @@
       loginTab.setAttribute('aria-selected', String(!showSignup));
       signupTab.classList.toggle('active', showSignup);
       loginTab.classList.toggle('active', !showSignup);
+      initializeVisibleCaptcha();
     }
 
     async function goToDashboard() {
@@ -165,38 +259,57 @@
 
     document.getElementById('forgotPassword').addEventListener('click', async (event) => {
       event.preventDefault();
-      const resetMessage = document.getElementById('resetMessage');
-      resetMessage.hidden = true;
-      loginError.hidden = true;
-      const email = document.getElementById('email').value.trim();
-      if (!email) {
-        loginError.textContent = 'Enter your email address first.';
-        loginError.hidden = false;
-        document.getElementById('email').focus();
-        return;
-      }
+      document.getElementById('resetEmail').value = document.getElementById('email').value.trim();
+      loginForm.hidden = true;
+      resetPanel.hidden = false;
+      document.getElementById('resetMessage').hidden = true;
+      resetError.hidden = true;
+      initializeVisibleCaptcha();
+      document.getElementById('resetEmail').focus();
+    });
+
+    document.getElementById('cancelReset').addEventListener('click', () => {
+      resetPanel.hidden = true;
+      loginForm.hidden = false;
+      resetError.hidden = true;
+      initializeVisibleCaptcha();
+    });
+
+    resetForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      resetError.hidden = true;
+      document.getElementById('resetMessage').hidden = true;
+      if (!requireCaptcha('reset', resetError)) return;
+      const button = captchaButtons.reset;
+      const token = captchaTokens.reset;
+      button.disabled = true;
       try {
-        await DawaDB.resetPasswordForEmail(email);
-        resetMessage.textContent = 'If an account exists for that address, a password reset email has been sent.';
-        resetMessage.hidden = false;
+        await DawaDB.resetPasswordForEmail(document.getElementById('resetEmail').value, token);
+        document.getElementById('resetMessage').textContent = 'If an account exists for that address, a password reset email has been sent.';
+        document.getElementById('resetMessage').hidden = false;
       } catch (error) {
-        loginError.textContent = error.message || 'Unable to send a password reset email.';
-        loginError.hidden = false;
+        resetError.textContent = error.message || 'Unable to send a password reset email.';
+        resetError.hidden = false;
+      } finally {
+        resetCaptcha('reset');
       }
     });
 
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       loginError.hidden = true;
-      const button = loginForm.querySelector('[type="submit"]');
+      if (!requireCaptcha('login', loginError)) return;
+      const button = captchaButtons.login;
+      const token = captchaTokens.login;
       button.disabled = true;
       try {
-        await DawaDB.signIn(document.getElementById('email').value, document.getElementById('password').value);
+        await DawaDB.signIn(document.getElementById('email').value, document.getElementById('password').value, token);
         await goToDashboard();
       } catch (error) {
         loginError.textContent = error.message || 'Incorrect email or password.';
         loginError.hidden = false;
-        button.disabled = false;
+      } finally {
+        resetCaptcha('login');
       }
     });
 
@@ -204,18 +317,21 @@
       event.preventDefault();
       signupError.hidden = true;
       signupSuccess.hidden = true;
+      if (!requireCaptcha('signup', signupError)) return;
+      const token = captchaTokens.signup;
       const formData = new FormData(signupForm);
       const values = Object.fromEntries(formData.entries());
       if (values.password !== values.confirm_password) {
         signupError.textContent = 'Passwords do not match.';
         signupError.hidden = false;
         signupForm.elements.confirm_password.focus();
+        resetCaptcha('signup');
         return;
       }
 
       signupButton.disabled = true;
       try {
-        const result = await DawaDB.signUpFacility(values);
+        const result = await DawaDB.signUpFacility(values, token);
         if (result.needsEmailConfirmation) {
           signupSuccess.hidden = false;
           signupForm.reset();
@@ -226,7 +342,7 @@
         signupError.textContent = error.message || 'Unable to create your account.';
         signupError.hidden = false;
       } finally {
-        signupButton.disabled = false;
+        resetCaptcha('signup');
       }
     });
 
@@ -241,6 +357,23 @@
       loginError.textContent = error.message || 'Unable to check your sign-in status.';
       loginError.hidden = false;
     });
+
+    const turnstileScript = document.getElementById('turnstileScript');
+    if (window.turnstile) {
+      turnstileLoaded = true;
+      initializeVisibleCaptcha();
+    } else {
+      turnstileScript.addEventListener('load', () => {
+        turnstileLoaded = true;
+        initializeVisibleCaptcha();
+      }, { once: true });
+      turnstileScript.addEventListener('error', () => {
+        showCaptchaWarnings('CAPTCHA could not load. Check your network connection and try again.');
+      }, { once: true });
+    }
+    if (!String(window.DAWA_TURNSTILE_SITE_KEY || '').trim()) {
+      showCaptchaWarnings('CAPTCHA is not configured. Set TURNSTILE_SITE_KEY in the build environment and config.js.');
+    }
   </script>
 </body>
 

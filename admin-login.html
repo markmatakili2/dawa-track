@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="db.js"></script>
+  <script id="turnstileScript" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -37,9 +38,11 @@
         <label>Password
           <input type="password" id="adminPassword" name="password" autocomplete="current-password" required />
         </label>
+        <p id="captchaWarning" class="notice notice-warning" hidden>CAPTCHA is not configured. Set TURNSTILE_SITE_KEY in the build environment and config.js.</p>
+        <div id="adminCaptcha" class="turnstile-widget" aria-label="Admin sign-in verification"></div>
         <p id="adminError" class="notice notice-error" role="alert" hidden></p>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Log in</button>
+          <button id="adminLoginButton" type="submit" class="btn btn-primary" disabled>Log in</button>
           <a href="login.html" class="btn btn-outline">Facility login</a>
         </div>
       </form>
@@ -64,16 +67,63 @@
   <script>
     const adminLoginForm = document.getElementById('adminLoginForm');
     const adminError = document.getElementById('adminError');
+    const adminLoginButton = document.getElementById('adminLoginButton');
+    const captchaWarning = document.getElementById('captchaWarning');
+    let captchaToken = '';
+    let captchaWidget;
+    let turnstileLoaded = Boolean(window.turnstile);
+
+    function setCaptchaToken(token) {
+      captchaToken = token || '';
+      adminLoginButton.disabled = !captchaToken;
+    }
+
+    function renderCaptcha() {
+      const siteKey = String(window.DAWA_TURNSTILE_SITE_KEY || '').trim();
+      if (!siteKey) {
+        captchaWarning.textContent = 'CAPTCHA is not configured. Set TURNSTILE_SITE_KEY in the build environment and config.js.';
+        captchaWarning.hidden = false;
+        return;
+      }
+      if (!turnstileLoaded || captchaWidget !== undefined) return;
+      captchaWarning.hidden = true;
+      const widgetElement = document.getElementById('adminCaptcha');
+      widgetElement.dataset.sitekey = siteKey;
+      captchaWidget = window.turnstile.render(widgetElement, {
+        sitekey: widgetElement.dataset.sitekey,
+        callback: setCaptchaToken,
+        'expired-callback': () => setCaptchaToken(''),
+        'error-callback': () => {
+          setCaptchaToken('');
+          adminError.textContent = 'Verification could not be completed. Please try again.';
+          adminError.hidden = false;
+        },
+      });
+    }
+
+    function resetCaptcha() {
+      setCaptchaToken('');
+      if (window.turnstile && captchaWidget !== undefined) {
+        window.turnstile.reset(captchaWidget);
+      }
+    }
 
     adminLoginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       adminError.hidden = true;
-      const button = adminLoginForm.querySelector('[type="submit"]');
-      button.disabled = true;
+      if (!captchaToken) {
+        adminError.textContent = 'Please complete the verification.';
+        adminError.hidden = false;
+        resetCaptcha();
+        return;
+      }
+      const token = captchaToken;
+      adminLoginButton.disabled = true;
       try {
         await DawaDB.signIn(
           document.getElementById('adminEmail').value,
-          document.getElementById('adminPassword').value
+          document.getElementById('adminPassword').value,
+          token
         );
         if (await DawaDB.getRole() !== 'admin') {
           try {
@@ -81,23 +131,37 @@
           } catch (error) {
             adminError.textContent = `This account isn't authorized for admin access. ${error.message}`;
             adminError.hidden = false;
-            button.disabled = false;
             return;
           }
           adminError.textContent = "This account isn't authorized for admin access.";
           adminError.hidden = false;
-          button.disabled = false;
           return;
         }
         window.location.href = 'admin-dashboard.html';
       } catch (error) {
         adminError.textContent = error.message || 'Unable to sign in to the admin dashboard.';
         adminError.hidden = false;
-        button.disabled = false;
+      } finally {
+        resetCaptcha();
       }
     });
 
     DawaDB.initializeNavigation();
+    const turnstileScript = document.getElementById('turnstileScript');
+    if (window.turnstile) {
+      turnstileLoaded = true;
+      renderCaptcha();
+    } else {
+      turnstileScript.addEventListener('load', () => {
+        turnstileLoaded = true;
+        renderCaptcha();
+      }, { once: true });
+      turnstileScript.addEventListener('error', () => {
+        captchaWarning.textContent = 'CAPTCHA could not load. Check your network connection and try again.';
+        captchaWarning.hidden = false;
+      }, { once: true });
+    }
+    if (!String(window.DAWA_TURNSTILE_SITE_KEY || '').trim()) renderCaptcha();
   </script>
 </body>
 

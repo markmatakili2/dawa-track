@@ -107,7 +107,8 @@ window.DawaDB = (function () {
     }
   }
 
-  async function signUpFacility(form) {
+  async function signUpFacility(form, captchaToken) {
+    if (!captchaToken) throw new Error('Please complete the verification.');
     const record = {
       facility_name: String(form?.facility_name || '').trim(),
       facility_type: String(form?.facility_type || 'other').trim(),
@@ -127,6 +128,7 @@ window.DawaDB = (function () {
         password: record.password,
         options: {
           emailRedirectTo: `${window.location.origin}/login.html`,
+          captchaToken,
           data: {
             facility_name: record.facility_name,
             facility_type: record.facility_type,
@@ -156,10 +158,12 @@ window.DawaDB = (function () {
     }
   }
 
-  async function signIn(email, password) {
+  async function signIn(email, password, captchaToken) {
+    if (!captchaToken) throw new Error('Please complete the verification.');
     const { data, error } = await getClient().auth.signInWithPassword({
       email: String(email || '').trim(),
       password: String(password || ''),
+      options: { captchaToken },
     });
     if (error || !data?.session) throw new Error('Incorrect email or password.');
     return data.session;
@@ -171,9 +175,11 @@ window.DawaDB = (function () {
     return true;
   }
 
-  async function resetPasswordForEmail(email) {
+  async function resetPasswordForEmail(email, captchaToken) {
+    if (!captchaToken) throw new Error('Please complete the verification.');
     const { error } = await getClient().auth.resetPasswordForEmail(String(email || '').trim(), {
       redirectTo: `${window.location.origin}/login.html`,
+      captchaToken,
     });
     if (error) throw new Error('Unable to send the password reset email. Check the address and try again.');
     return true;
