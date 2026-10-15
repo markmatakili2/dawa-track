@@ -75,16 +75,16 @@
           Location address *
           <input name="location" type="text" placeholder="Ward, street or delivery point" required />
         </label>
-        <label style="grid-column: 1 / -1;">
+        <label class="grid-full">
           Notes
           <textarea name="notes" placeholder="Share batch details, transport needs or special handling instructions."></textarea>
         </label>
-        <div class="form-actions" style="grid-column: 1 / -1;">
+        <div class="form-actions grid-full">
           <button type="submit" class="btn btn-primary">Submit listing</button>
           <a href="index.html" class="btn btn-outline">View available medicine</a>
         </div>
-        <p id="surplusError" class="demo-note hidden" style="grid-column: 1 / -1; color: var(--red);"></p>
-        <p id="surplusSuccess" class="demo-note hidden" style="grid-column: 1 / -1;">Your surplus listing is pending admin approval.</p>
+        <p id="surplusError" class="demo-note hidden grid-full text-danger"></p>
+        <p id="surplusSuccess" class="demo-note hidden grid-full">Your surplus listing is pending admin approval.</p>
       </form>
     </section>
   </main>
