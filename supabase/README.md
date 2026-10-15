@@ -1,37 +1,46 @@
 # Supabase setup for Dawa Track
 
-This project is a static frontend that talks to Supabase for authentication, facility data, medicine listings, and transfer requests. The app does not run its own server, so the database must be created manually in Supabase.
+Dawa Track is a static frontend backed by Supabase Postgres and Auth. Database security is enforced with row-level security and triggers; frontend restrictions are only a usability layer.
 
-## What the migration does
+## Run the migrations
 
-The file [supabase/migrations/0001_init.sql](./migrations/0001_init.sql) creates the database tables, enum values, row-level security policies, indexes, and the admin helper functions the frontend relies on.
+Apply the SQL manually and in order:
 
-It sets up:
+1. Open the Supabase project and go to **SQL Editor**.
+2. Paste and run [`migrations/0001_init.sql`](./migrations/0001_init.sql).
+3. Paste and run [`migrations/0002_facility_accounts.sql`](./migrations/0002_facility_accounts.sql).
 
-- `public.facilities` for facility registry data
-- `public.medicines` for approved and pending stock listings
-- `public.transfer_requests` for medicine requests from the public browse page
-- `public.admins` for the admin authorization list
-- RLS rules so anonymous users can submit listings and requests, while only admins can approve or manage sensitive records
+The migrations are not run automatically by the static site. Migration 0002 replaces the public facility registry with Auth-linked facility profiles, adds verification and ownership tracking, and restricts listings and transfer requests through RLS.
 
-## Run the migration manually
+## Configure Supabase Auth
 
-1. Open your Supabase project.
-2. Go to the SQL Editor.
-3. Paste the contents of [supabase/migrations/0001_init.sql](./migrations/0001_init.sql).
-4. Run the script.
+In **Authentication → URL Configuration**:
 
-This repository does not auto-apply the migration.
+- Keep **Confirm email** enabled.
+- Set **Site URL** to the deployed Vercel site origin, for example `https://your-project.vercel.app`.
+- Add the deployed origin plus the local development origin to **Redirect URLs**, for example:
+  - `https://your-project.vercel.app/**`
+  - `http://localhost:5500/**`
+  - `http://127.0.0.1:5500/**`
 
-## Create an admin user
+The signup flow sends confirmation links to `/login.html`. Use the actual local server origin and port in the redirect allowlist when developing locally.
 
-1. In Supabase, go to Authentication → Users.
-2. Add a user.
-3. Copy the new user UID.
-4. Run the following in the SQL Editor:
+## Facility signup and verification
+
+Facilities create accounts through **Create account** on `login.html`. The signup sends facility and contact details as Auth user metadata. A database trigger creates a linked `facility_profiles` row with `pending` verification status, including when email confirmation is required and the new user has no active session yet.
+
+Pending facilities can sign in and browse approved, unexpired listings. Only approved facilities can submit transfer requests or add medicine listings. Rejected and suspended profiles cannot browse listings. These rules are enforced in the database; hiding or disabling interface controls does not grant access.
+
+An administrator reviews facility profiles in the admin dashboard. Approval, rejection, and suspension are recorded with the administrator UID and timestamp. Rejected or suspended facilities can be reactivated by an administrator.
+
+## Create an administrator
+
+1. In Supabase, open **Authentication → Users** and create the administrator account. Do not include facility signup metadata.
+2. Copy the account UID.
+3. Run this statement in the SQL Editor, replacing `<uid>` with the actual UID:
 
 ```sql
 insert into public.admins (user_id) values ('<uid>');
 ```
 
-Once the UID is added to `public.admins`, the user can sign in to the admin dashboard.
+Admin membership is managed manually in the SQL Editor; client access to the `admins` table remains disabled. Administrators use `admin-login.html`.

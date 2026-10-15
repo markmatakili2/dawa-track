@@ -1,89 +1,104 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Login | Dawa Track</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
-    <script src="config.js"></script>
-    <script src="db.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin login | Dawa Track</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
 </head>
 
 <body>
-    <header class="site-header">
-        <nav class="navbar">
-            <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="about.html">About</a>
-                <a href="surplus.html">Surplus stock</a>
-                <a href="login.html">Login</a>
-            </div>
-            <a href="admin-login.html" class="btn btn-primary">Admin</a>
-        </nav>
-    </header>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="login.html" data-nav-login>Login</a>
+        <a href="facility-dashboard.html" data-nav-dashboard hidden>Dashboard</a>
+        <button type="button" class="btn btn-outline" data-nav-logout hidden>Log out</button>
+      </div>
+      <span class="small-note" data-nav-status role="status" hidden></span>
+    </nav>
+  </header>
 
-    <main class="page">
-        <section class="form-card admin-login-card">
-            <h2 class="section-title">Admin login</h2>
-            <p class="section-subtitle">Use the administrator account to approve listings and review requests.</p>
-            <form id="adminLoginForm" class="form-grid">
-                <label>
-                    Email address
-                    <input type="email" id="adminEmail" name="email" required />
-                </label>
-                <label>
-                    Password
-                    <input type="password" id="adminPassword" name="password" required />
-                </label>
-                <div id="adminError" class="demo-note hidden text-danger"></div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Log in</button>
-                    <a href="login.html" class="btn btn-outline">Facility login</a>
-                </div>
-            </form>
-        </section>
-    </main>
-
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div>
-                <strong>Dawa Track</strong>
-                <p>Admin access is secured through Supabase authentication.</p>
-            </div>
-            <div>
-                <a href="index.html">Home</a><br />
-                <a href="about.html">About</a><br />
-                <a href="surplus.html">List surplus stock</a><br />
-                <a href="login.html">Facility login</a><br />
-                <a href="admin-login.html">Admin</a>
-            </div>
+  <main class="page">
+    <section class="form-card admin-login-card">
+      <h1 class="section-title">Admin login</h1>
+      <p class="section-subtitle">Administrator access is separate from facility accounts.</p>
+      <form id="adminLoginForm" class="form-grid">
+        <label>Email address
+          <input type="email" id="adminEmail" name="email" autocomplete="username" required />
+        </label>
+        <label>Password
+          <input type="password" id="adminPassword" name="password" autocomplete="current-password" required />
+        </label>
+        <p id="adminError" class="notice notice-error" role="alert" hidden></p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Log in</button>
+          <a href="login.html" class="btn btn-outline">Facility login</a>
         </div>
-    </footer>
+      </form>
+    </section>
+  </main>
 
-    <script>
-        const adminLoginForm = document.getElementById('adminLoginForm');
-        const adminError = document.getElementById('adminError');
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Dawa Track</strong>
+        <p>Helping facilities move medicine before it becomes waste.</p>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="about.html">About</a><br />
+        <a href="login.html">Facility login</a><br />
+        <a href="admin-login.html">Admin</a>
+      </div>
+    </div>
+  </footer>
 
-        adminLoginForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            adminError.textContent = '';
-            adminError.classList.add('hidden');
+  <script>
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    const adminError = document.getElementById('adminError');
 
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value;
+    adminLoginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      adminError.hidden = true;
+      const button = adminLoginForm.querySelector('[type="submit"]');
+      button.disabled = true;
+      try {
+        await DawaDB.signIn(
+          document.getElementById('adminEmail').value,
+          document.getElementById('adminPassword').value
+        );
+        if (await DawaDB.getRole() !== 'admin') {
+          try {
+            await DawaDB.signOut();
+          } catch (error) {
+            adminError.textContent = `This account isn't authorized for admin access. ${error.message}`;
+            adminError.hidden = false;
+            button.disabled = false;
+            return;
+          }
+          adminError.textContent = "This account isn't authorized for admin access.";
+          adminError.hidden = false;
+          button.disabled = false;
+          return;
+        }
+        window.location.href = 'admin-dashboard.html';
+      } catch (error) {
+        adminError.textContent = error.message || 'Unable to sign in to the admin dashboard.';
+        adminError.hidden = false;
+        button.disabled = false;
+      }
+    });
 
-            try {
-                await DawaDB.signInAdmin(email, password);
-                window.location.href = 'admin-dashboard.html';
-            } catch (error) {
-                adminError.textContent = "incorrect email or password, or this account isn't authorized";
-                adminError.classList.remove('hidden');
-            }
-        });
-    </script>
+    DawaDB.initializeNavigation();
+  </script>
 </body>
 
 </html>

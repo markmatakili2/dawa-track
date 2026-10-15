@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Facility dashboard | Dawa Track</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="login.html" data-nav-login>Login</a>
+        <a class="active" href="facility-dashboard.html" data-nav-dashboard hidden>Dashboard</a>
+        <button type="button" class="btn btn-outline" data-nav-logout hidden>Log out</button>
+      </div>
+      <span class="small-note" data-nav-status role="status" hidden></span>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="hero-card dashboard-hero">
+      <div>
+        <p class="eyebrow">Facility workspace</p>
+        <h1 id="facilityHeading">Facility dashboard</h1>
+        <p>Browse medicine, manage your listings and follow transfer requests.</p>
+      </div>
+    </section>
+    <div id="verificationBanner" class="verification-banner" role="status" hidden></div>
+    <p id="dashboardMessage" class="notice notice-error" role="alert" hidden></p>
+    <div id="facilityWorkspace" hidden>
+      <div class="dashboard-tabs" role="tablist" aria-label="Facility dashboard sections">
+        <button class="btn btn-outline active" type="button" role="tab" aria-selected="true" data-panel="browse">Browse listings</button>
+        <button class="btn btn-outline" type="button" role="tab" aria-selected="false" data-panel="listings">My listings</button>
+        <button class="btn btn-outline" type="button" role="tab" aria-selected="false" data-panel="requests">My requests</button>
+      </div>
+      <section id="dashboardPanel" class="card" role="tabpanel"></section>
+    </div>
+  </main>
+
+  <div id="requestModal" class="modal-backdrop" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="requestTitle">
+      <div class="modal-head">
+        <h2 id="requestTitle">Request medicine</h2>
+        <button id="closeRequest" class="modal-close" type="button" aria-label="Close request form">×</button>
+      </div>
+      <p id="requestMedicineLabel" class="section-subtitle"></p>
+      <form id="requestForm" class="form-grid">
+        <input id="requestMedicineId" type="hidden" />
+        <label>Delivery location *
+          <input id="deliveryLocation" type="text" required />
+        </label>
+        <label>Contact person
+          <input id="requestContactPerson" type="text" readonly />
+        </label>
+        <label>Phone
+          <input id="requestPhone" type="tel" readonly />
+        </label>
+        <label>Email
+          <input id="requestEmail" type="email" readonly />
+        </label>
+        <label>Request details
+          <textarea id="requestDetails" placeholder="Mention quantity, urgency and delivery notes"></textarea>
+        </label>
+        <p id="requestError" class="notice notice-error" role="alert" hidden></p>
+        <div class="form-actions">
+          <button id="submitRequestButton" class="btn btn-primary" type="submit">Submit request</button>
+          <button id="cancelRequest" class="btn btn-outline" type="button">Cancel</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Dawa Track</strong>
+        <p>Helping facilities move medicine before it becomes waste.</p>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="about.html">About</a><br />
+        <a href="login.html">Facility login</a><br />
+        <a href="admin-login.html">Admin</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const dashboardPanel = document.getElementById('dashboardPanel');
+    const dashboardMessage = document.getElementById('dashboardMessage');
+    const verificationBanner = document.getElementById('verificationBanner');
+    const facilityWorkspace = document.getElementById('facilityWorkspace');
+    const requestModal = document.getElementById('requestModal');
+    const requestForm = document.getElementById('requestForm');
+    let profile = null;
+    let activePanel = 'browse';
+    let browseMedicines = [];
+    let myListings = [];
+    let myRequests = [];
+    let searchTerm = '';
+
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      if (text !== undefined && text !== null) node.textContent = String(text);
+      if (className) node.className = className;
+      return node;
+    }
+
+    function addCell(row, text, className) {
+      const cell = element('td', text ?? '-', className);
+      row.append(cell);
+      return cell;
+    }
+
+    function makeTable(headers) {
+      const wrapper = element('div', null, 'table-wrap');
+      const table = element('table');
+      const thead = document.createElement('thead');
+      const headingRow = document.createElement('tr');
+      headers.forEach((header) => headingRow.append(element('th', header)));
+      thead.append(headingRow);
+      table.append(thead);
+      const tbody = document.createElement('tbody');
+      table.append(tbody);
+      wrapper.append(table);
+      return { wrapper, tbody };
+    }
+
+    function setPanelMessage(message, isError = false) {
+      dashboardMessage.textContent = message || '';
+      dashboardMessage.className = isError ? 'notice notice-error' : 'notice notice-success';
+      dashboardMessage.hidden = !message;
+    }
+
+    function userError(error) {
+      const message = String(error?.message || '');
+      if (/row.level security|permission denied|verified to do this/i.test(message)) {
+        return 'Your facility must be verified to do this.';
+      }
+      return message || 'Unable to complete that action. Please try again.';
+    }
+
+    function badge(status, label) {
+      const classes = {
+        approved: 'green',
+        ready: 'green',
+        resolved: 'green',
+        pending: 'amber',
+        monitor: 'amber',
+        contacted: 'teal',
+        rejected: 'red',
+        suspended: 'red',
+        new: 'amber',
+      };
+      return element('span', label || status, `badge ${classes[status] || 'gray'}`);
+    }
+
+    function expiryDays(expiry) {
+      const target = new Date(`${expiry}T00:00:00Z`);
+      const today = new Date();
+      const currentDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+      return Math.max(0, Math.ceil((target.getTime() - currentDay) / 86400000));
+    }
+
+    function renderBrowse() {
+      dashboardPanel.replaceChildren(
+        element('h2', 'Browse listings', 'section-title'),
+        element('p', 'Approved, unexpired stock available to facilities in the network.', 'section-subtitle')
+      );
+      const search = element('input');
+      search.type = 'search';
+      search.placeholder = 'Search medicine, facility or status';
+      search.setAttribute('aria-label', 'Search available listings');
+      search.value = searchTerm;
+      const searchRow = element('div', null, 'search-row');
+      searchRow.append(search);
+      dashboardPanel.append(searchRow);
+      const table = makeTable(['Medicine', 'Quantity', 'Facility', 'Days to expiry', 'Status', 'Action']);
+      dashboardPanel.append(table.wrapper);
+
+      const renderRows = () => {
+        table.tbody.replaceChildren();
+        const filtered = browseMedicines.filter((item) =>
+          `${item.drug} ${item.facility} ${item.status}`.toLowerCase().includes(searchTerm)
+        );
+        filtered.forEach((item) => {
+          const row = document.createElement('tr');
+          addCell(row, item.drug);
+          addCell(row, item.quantityLabel || `${item.quantity} ${item.unit}`);
+          addCell(row, item.facility);
+          addCell(row, expiryDays(item.expiry));
+          const statusCell = document.createElement('td');
+          statusCell.append(badge(item.status, item.status === 'ready' ? 'Ready' : item.status === 'monitor' ? 'Monitor' : item.status));
+          row.append(statusCell);
+          const action = document.createElement('td');
+          if (item.listedBy === profile.userId) {
+            action.append(element('span', 'Your listing', 'small-note'));
+          } else {
+            const button = element('button', profile.verificationStatus === 'approved' ? 'Request' : 'Available after verification', 'btn btn-outline request-btn');
+            button.type = 'button';
+            if (profile.verificationStatus !== 'approved') {
+              button.disabled = true;
+              button.title = 'Your facility must be verified before you can request medicine.';
+            } else {
+              button.addEventListener('click', () => openRequest(item));
+            }
+            action.append(button);
+          }
+          row.append(action);
+          table.tbody.append(row);
+        });
+        if (!filtered.length) {
+          const row = document.createElement('tr');
+          const cell = element('td', browseMedicines.length ? 'No listings match your search.' : 'No approved medicine listings are available yet.', 'empty-state');
+          cell.colSpan = 6;
+          row.append(cell);
+          table.tbody.append(row);
+        }
+      };
+      search.addEventListener('input', () => {
+        searchTerm = search.value.trim().toLowerCase();
+        renderRows();
+      });
+      renderRows();
+    }
+
+    function renderListings() {
+      dashboardPanel.replaceChildren(
+        element('h2', 'My listings', 'section-title'),
+        element('p', 'Listings you have submitted to the facility network.', 'section-subtitle')
+      );
+      const table = makeTable(['Medicine', 'Quantity', 'Expiry', 'Approval', 'Action']);
+      myListings.forEach((item) => {
+        const row = document.createElement('tr');
+        addCell(row, item.drug);
+        addCell(row, item.quantityLabel || `${item.quantity} ${item.unit}`);
+        addCell(row, item.expiry);
+        const approvalCell = document.createElement('td');
+        const approvalLabel = item.approval === 'approved' ? 'Approved' : item.approval === 'rejected' ? 'Rejected' : 'Pending approval';
+        approvalCell.append(badge(item.approval, approvalLabel));
+        row.append(approvalCell);
+        const action = document.createElement('td');
+        if (item.approval === 'pending') {
+          const button = element('button', 'Withdraw', 'btn btn-outline');
+          button.type = 'button';
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            try {
+              await DawaDB.withdrawMyListing(item.id);
+              await loadPanelData();
+              renderCurrentPanel();
+              setPanelMessage('Pending listing withdrawn.');
+            } catch (error) {
+              setPanelMessage(userError(error), true);
+              button.disabled = false;
+            }
+          });
+          action.append(button);
+        } else {
+          action.append(element('span', '—', 'small-note'));
+        }
+        row.append(action);
+        table.tbody.append(row);
+      });
+      if (!myListings.length) {
+        const row = document.createElement('tr');
+        const cell = element('td', 'You have not submitted any listings yet.', 'empty-state');
+        cell.colSpan = 5;
+        row.append(cell);
+        table.tbody.append(row);
+      }
+      dashboardPanel.append(table.wrapper);
+
+      const formTitle = element('h3', 'Add a listing');
+      const form = document.createElement('form');
+      form.className = 'form-grid listing-form';
+      const fieldset = document.createElement('fieldset');
+      fieldset.className = 'form-section';
+      fieldset.disabled = profile.verificationStatus !== 'approved';
+      const legend = element('legend', 'Medicine details');
+      fieldset.append(legend);
+      const inputs = [
+        ['Medicine name *', 'drug_name', 'text'],
+        ['Quantity *', 'quantity', 'number'],
+        ['Unit *', 'unit', 'text'],
+        ['Expiry date *', 'expiry_date', 'date'],
+        ['Storage condition', 'storage_condition', 'text'],
+      ];
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const minimumExpiry = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+      inputs.forEach(([labelText, name, type]) => {
+        const label = element('label', labelText);
+        const input = element('input');
+        input.name = name;
+        input.type = type;
+        input.required = ['drug_name', 'quantity', 'unit', 'expiry_date'].includes(name);
+        if (name === 'quantity') {
+          input.min = '1';
+          input.step = '1';
+        }
+        if (name === 'unit') input.value = 'units';
+        if (name === 'expiry_date') input.min = minimumExpiry;
+        label.append(input);
+        fieldset.append(label);
+      });
+      const notesLabel = element('label', 'Notes');
+      const notes = element('textarea');
+      notes.name = 'notes';
+      notesLabel.append(notes);
+      fieldset.append(notesLabel);
+      form.append(fieldset);
+      if (profile.verificationStatus !== 'approved') {
+        form.append(element('p', 'Listing medicine is available after an administrator verifies your facility.', 'small-note'));
+      }
+      const submitActions = element('div', null, 'form-actions');
+      const submit = element('button', 'Submit listing', 'btn btn-primary');
+      submit.type = 'submit';
+      submit.disabled = profile.verificationStatus !== 'approved';
+      submitActions.append(submit);
+      form.append(submitActions);
+      dashboardPanel.append(formTitle, form);
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const values = Object.fromEntries(new FormData(form).entries());
+        if (values.expiry_date <= new Date().toISOString().slice(0, 10)) {
+          setPanelMessage('Expiry date must be in the future.', true);
+          return;
+        }
+        submit.disabled = true;
+        try {
+          await DawaDB.addMyListing(values);
+          form.reset();
+          await loadPanelData();
+          renderCurrentPanel();
+          setPanelMessage('Listing submitted for administrator approval.');
+        } catch (error) {
+          setPanelMessage(userError(error), true);
+          submit.disabled = false;
+        }
+      });
+    }
+
+    function renderRequests() {
+      dashboardPanel.replaceChildren(
+        element('h2', 'My requests', 'section-title'),
+        element('p', 'Track transfer requests submitted by your facility.', 'section-subtitle')
+      );
+      const table = makeTable(['Medicine', 'Supplying facility', 'Delivery location', 'Details', 'Submitted', 'Status']);
+      myRequests.forEach((request) => {
+        const row = document.createElement('tr');
+        addCell(row, request.drug);
+        addCell(row, request.supplierFacility);
+        addCell(row, request.deliveryLocation);
+        addCell(row, request.details || '—');
+        addCell(row, request.submittedAt ? new Date(request.submittedAt).toLocaleDateString('en-GB') : '—');
+        const statusCell = document.createElement('td');
+        statusCell.append(badge(request.status, request.status));
+        row.append(statusCell);
+        table.tbody.append(row);
+      });
+      if (!myRequests.length) {
+        const row = document.createElement('tr');
+        const cell = element('td', 'No transfer requests have been submitted yet.', 'empty-state');
+        cell.colSpan = 6;
+        row.append(cell);
+        table.tbody.append(row);
+      }
+      dashboardPanel.append(table.wrapper);
+    }
+
+    async function loadPanelData() {
+      if (profile.verificationStatus === 'rejected' || profile.verificationStatus === 'suspended') return;
+      if (activePanel === 'browse') browseMedicines = await DawaDB.getBrowseMedicines();
+      if (activePanel === 'listings') myListings = await DawaDB.getMyListings();
+      if (activePanel === 'requests') myRequests = await DawaDB.getMyRequests();
+    }
+
+    function renderCurrentPanel() {
+      setPanelMessage('');
+      if (activePanel === 'browse') renderBrowse();
+      if (activePanel === 'listings') renderListings();
+      if (activePanel === 'requests') renderRequests();
+      document.querySelectorAll('[data-panel]').forEach((button) => {
+        const selected = button.dataset.panel === activePanel;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-selected', String(selected));
+      });
+    }
+
+    function renderVerificationBanner() {
+      verificationBanner.hidden = false;
+      verificationBanner.className = `verification-banner ${profile.verificationStatus}`;
+      verificationBanner.replaceChildren();
+      if (profile.verificationStatus === 'pending') {
+        verificationBanner.textContent = 'Verification pending. You can browse listings. Requesting and listing unlock after an administrator verifies your facility.';
+      } else if (profile.verificationStatus === 'approved') {
+        verificationBanner.append(badge('approved', 'Verified facility'));
+      } else if (profile.verificationStatus === 'rejected') {
+        verificationBanner.append(
+          element('strong', 'Facility verification was rejected.'),
+          element('p', profile.verificationNotes || 'No additional review notes were provided.')
+        );
+        const contact = element('a', 'Contact the administrator through the Admin portal.', 'text-link');
+        contact.href = 'admin-login.html';
+        verificationBanner.append(contact);
+      } else {
+        verificationBanner.append(
+          element('strong', 'Access to listings is paused while this facility is suspended.'),
+          element('p', profile.verificationNotes || 'Contact the Dawa Track administrator for more information.')
+        );
+      }
+    }
+
+    function openRequest(item) {
+      document.getElementById('requestMedicineId').value = item.id;
+      document.getElementById('requestMedicineLabel').textContent = `${item.drug} · ${item.quantityLabel} · ${item.facility}`;
+      document.getElementById('deliveryLocation').value = profile.address || profile.county || '';
+      document.getElementById('requestContactPerson').value = profile.contactPerson || '';
+      document.getElementById('requestPhone').value = profile.phone || '';
+      document.getElementById('requestEmail').value = profile.email || '';
+      document.getElementById('requestDetails').value = '';
+      document.getElementById('requestError').hidden = true;
+      requestModal.hidden = false;
+      document.getElementById('deliveryLocation').focus();
+    }
+
+    function closeRequest() {
+      requestModal.hidden = true;
+    }
+
+    document.getElementById('closeRequest').addEventListener('click', closeRequest);
+    document.getElementById('cancelRequest').addEventListener('click', closeRequest);
+    requestModal.addEventListener('click', (event) => {
+      if (event.target === requestModal) closeRequest();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !requestModal.hidden) closeRequest();
+    });
+
+    requestForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const errorMessage = document.getElementById('requestError');
+      const submit = document.getElementById('submitRequestButton');
+      errorMessage.hidden = true;
+      submit.disabled = true;
+      try {
+        await DawaDB.submitTransferRequest(
+          document.getElementById('requestMedicineId').value,
+          document.getElementById('requestDetails').value,
+          document.getElementById('deliveryLocation').value
+        );
+        closeRequest();
+        activePanel = 'requests';
+        await loadPanelData();
+        renderCurrentPanel();
+        setPanelMessage('Your transfer request has been submitted.');
+      } catch (error) {
+        errorMessage.textContent = userError(error);
+        errorMessage.hidden = false;
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    document.querySelectorAll('[data-panel]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        activePanel = button.dataset.panel;
+        try {
+          await loadPanelData();
+          renderCurrentPanel();
+        } catch (error) {
+          setPanelMessage(userError(error), true);
+        }
+      });
+    });
+
+    async function initializeDashboard() {
+      try {
+        const session = await DawaDB.getSession();
+        if (!session) {
+          window.location.replace('login.html');
+          return;
+        }
+        if (await DawaDB.getRole() === 'admin') {
+          window.location.replace('admin-dashboard.html');
+          return;
+        }
+        profile = await DawaDB.getMyProfile();
+        if (!profile) {
+          setPanelMessage('No facility profile is linked to this account. Contact an administrator.', true);
+          return;
+        }
+        document.getElementById('facilityHeading').textContent = profile.facilityName;
+        renderVerificationBanner();
+        if (profile.verificationStatus === 'rejected' || profile.verificationStatus === 'suspended') return;
+        facilityWorkspace.hidden = false;
+        await loadPanelData();
+        renderCurrentPanel();
+      } catch (error) {
+        setPanelMessage(userError(error), true);
+      }
+    }
+
+    DawaDB.initializeNavigation();
+    initializeDashboard();
+  </script>
+</body>
+
+</html>

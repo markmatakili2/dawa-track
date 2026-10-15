@@ -15,22 +15,45 @@
     --success-tint: #e8f4ec;
     --warning-ink: #79500f;
     --success-ink: #23613f;
+    --table-header: #435062;
+    --neutral-tint: #edf0f3;
+    --neutral-ink: #465263;
+    --placeholder: #687586;
+    --footer-text: #d4dae2;
+    --footer-line: #465263;
+    --hero-surface: #155f56;
+    --hero-text: #e2efed;
+    --hero-line: #d4e4e1;
+    --danger-on-dark: #ffd0c9;
 
     /* Compatibility aliases used by the untouched dashboard and prototype pages. */
     --teal: var(--primary);
     --teal-dark: var(--primary-dark);
     --teal-tint: var(--primary-tint);
-    --amber: var(--warning-ink);
+    --amber: var(--warning);
     --amber-tint: var(--warning-tint);
     --red: var(--danger);
     --red-tint: var(--danger-tint);
-    --green: var(--success-ink);
+    --green: var(--success);
     --green-tint: var(--success-tint);
     --navy: var(--ink);
 }
 
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
 * {
     box-sizing: border-box;
+}
+
+.admin-login-card {
+    max-width: 520px;
+}
+
+[hidden] {
+    display: none !important;
 }
 
 html {
@@ -165,12 +188,12 @@ textarea {
 
 .btn-primary {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--surface);
 }
 
 .btn-primary:hover {
     background: var(--primary-dark);
-    color: #ffffff;
+    color: var(--surface);
 }
 
 .btn-outline {
@@ -229,6 +252,126 @@ textarea {
     color: var(--muted);
 }
 
+.small-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.account-card {
+    max-width: 720px;
+}
+
+.account-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.account-tabs .active {
+    border-color: var(--primary);
+    background: var(--primary-tint);
+    color: var(--primary-dark);
+}
+
+.form-section {
+    min-width: 0;
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.form-section legend {
+    padding: 0 8px;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.check-label {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    font-size: 14px;
+}
+
+.check-label input {
+    flex: 0 0 20px;
+    width: 20px;
+    min-height: 20px;
+    margin: 3px 0 0;
+    accent-color: var(--primary);
+}
+
+.text-link {
+    color: var(--primary-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.notice {
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.notice-error {
+    background: var(--danger-tint);
+    color: var(--danger);
+}
+
+.notice-success {
+    background: var(--success-tint);
+    color: var(--success-ink);
+}
+
+.verification-banner {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    background: var(--warning-tint);
+    color: var(--warning-ink);
+}
+
+.verification-banner.approved {
+    border-color: var(--success);
+    background: var(--success-tint);
+    color: var(--success-ink);
+}
+
+.verification-banner.rejected,
+.verification-banner.suspended {
+    border-color: var(--danger);
+    background: var(--danger-tint);
+    color: var(--danger);
+}
+
+.dashboard-tabs,
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.dashboard-tabs .active,
+.filter-chips .active {
+    border-color: var(--primary);
+    background: var(--primary-tint);
+    color: var(--primary-dark);
+}
+
+.form-card .form-section,
+.account-card .form-section {
+    grid-template-columns: 1fr;
+}
+
 .table-wrap {
     max-width: 100%;
     overflow-x: auto;
@@ -254,7 +397,7 @@ td {
 
 th {
     background: var(--bg);
-    color: #435062;
+    color: var(--table-header);
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -274,11 +417,15 @@ th {
 .status-pill.green,
 .badge.green,
 .badge.approved,
-.badge.contacted,
-.badge.resolved,
-.badge.teal {
+.badge.resolved {
     background: var(--success-tint);
     color: var(--success-ink);
+}
+
+.badge.contacted,
+.badge.teal {
+    background: var(--primary-tint);
+    color: var(--primary-dark);
 }
 
 .status-pill.amber,
@@ -291,8 +438,8 @@ th {
 
 .status-pill.gray,
 .badge.gray {
-    background: #edf0f3;
-    color: #465263;
+    background: var(--neutral-tint);
+    color: var(--neutral-ink);
 }
 
 .badge.rejected,
@@ -349,7 +496,7 @@ textarea {
 
 input::placeholder,
 textarea::placeholder {
-    color: #687586;
+    color: var(--placeholder);
     opacity: 1;
 }
 
@@ -375,7 +522,7 @@ textarea {
     margin-top: 20px;
     padding: 24px 0;
     background: var(--ink);
-    color: #d4dae2;
+    color: var(--footer-text);
 }
 
 .site-footer .footer-inner {
@@ -393,11 +540,11 @@ textarea {
 }
 
 .site-footer a {
-    color: #d4dae2;
+    color: var(--footer-text);
 }
 
 .site-footer a:hover {
-    color: #ffffff;
+    color: var(--surface);
     text-decoration: underline;
 }
 
@@ -473,7 +620,7 @@ textarea {
 .hero {
     padding: 40px 24px;
     background: var(--primary-dark);
-    color: #ffffff;
+    color: var(--surface);
 }
 
 .hero-grid {
@@ -491,7 +638,7 @@ textarea {
 .hero p.lead {
     max-width: 480px;
     margin-bottom: 20px;
-    color: #e2efed;
+    color: var(--hero-text);
 }
 
 .hero .cta-row {
@@ -501,25 +648,25 @@ textarea {
 }
 
 .hero .btn.outline {
-    border-color: #d4e4e1;
-    color: #ffffff;
+    border-color: var(--hero-line);
+    color: var(--surface);
 }
 
 .hero .btn.outline:hover {
-    border-color: #ffffff;
-    background: #ffffff;
+    border-color: var(--surface);
+    background: var(--surface);
     color: var(--primary-dark);
 }
 
 .urgent-card {
     padding: 20px;
-    border: 1px solid #d4e4e1;
+    border: 1px solid var(--hero-line);
     border-radius: 8px;
-    background: #155f56;
+    background: var(--hero-surface);
 }
 
 .urgent-card .eyebrow {
-    color: #e2efed;
+    color: var(--hero-text);
 }
 
 .urgent-card .drug {
@@ -530,7 +677,7 @@ textarea {
 
 .urgent-card .meta {
     margin-bottom: 12px;
-    color: #e2efed;
+    color: var(--hero-text);
     font-size: 13px;
 }
 
@@ -540,7 +687,7 @@ textarea {
 }
 
 .cd-big.urgent {
-    color: #ffd0c9;
+    color: var(--danger-on-dark);
 }
 
 .pulse-dot {
@@ -609,7 +756,7 @@ textarea {
     margin-top: 20px;
     padding: 32px 0 24px;
     background: var(--ink);
-    color: #d4dae2;
+    color: var(--footer-text);
 }
 
 .footer .wrap {
@@ -621,16 +768,16 @@ textarea {
 
 .footer .logo,
 .footer .col h4 {
-    color: #ffffff;
+    color: var(--surface);
 }
 
 .footer a {
-    color: #d4dae2;
+    color: var(--footer-text);
     font-size: 13px;
 }
 
 .footer a:hover {
-    color: #ffffff;
+    color: var(--surface);
 }
 
 .footer .cols {
@@ -653,8 +800,8 @@ textarea {
 .footer .bottom {
     margin-top: 20px;
     padding-top: 12px;
-    border-top: 1px solid #465263;
-    color: #d4dae2;
+    border-top: 1px solid var(--footer-line);
+    color: var(--footer-text);
     font-size: 13px;
 }
 

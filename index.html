@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dawa Track -Browse available medicine</title>
+  <title>Dawa Track | Facility medicine coordination</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
@@ -18,93 +18,66 @@
       <div class="nav-links">
         <a class="active" href="index.html">Home</a>
         <a href="about.html">About</a>
-        <a href="surplus.html">Surplus stock</a>
-        <a href="login.html">Login</a>
+        <a href="login.html" data-nav-login>Login</a>
+        <a href="facility-dashboard.html" data-nav-dashboard hidden>Dashboard</a>
+        <button type="button" class="btn btn-outline" data-nav-logout hidden>Log out</button>
       </div>
-      <a href="surplus.html" class="btn btn-primary">List stock</a>
+      <span class="small-note" data-nav-status role="status" hidden></span>
     </nav>
   </header>
 
   <main class="page">
     <section class="hero-card">
-      <h1>Browse available medicine</h1>
-      <p>See stock that is close to expiry and ready for transfer between facilities.</p>
+      <h1>Before expiry, not after.</h1>
+      <p>Dawa Track helps licensed facilities coordinate medicine transfers before usable stock expires.</p>
+      <div class="form-actions">
+        <a href="login.html" class="btn btn-primary">Log in</a>
+        <a href="login.html?mode=signup" class="btn btn-outline">Register your facility</a>
+      </div>
     </section>
 
     <section class="card">
-      <h2 class="section-title">Medicine available now</h2>
-      <p class="section-subtitle">Search by medicine name, facility or status and request stock directly.</p>
-      <p id="pageError" class="demo-note hidden text-danger mb-12"></p>
-      <div class="search-row">
-        <input id="medicineSearch" type="text" placeholder="Search medicine, facility or status" />
-        <button id="searchBtn" type="button" class="btn btn-primary">Search</button>
+      <h2 class="section-title">How it works</h2>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>1. Register</h3>
+          <p>Create an account with your facility and licensing details.</p>
+        </article>
+        <article class="feature">
+          <h3>2. Get verified</h3>
+          <p>An administrator reviews your facility before requests and listings unlock.</p>
+        </article>
+        <article class="feature">
+          <h3>3. Browse and request</h3>
+          <p>Verified facilities can find suitable stock and submit transfer requests.</p>
+        </article>
+        <article class="feature">
+          <h3>4. Coordinate transfer</h3>
+          <p>Administrators broker requests between the facilities involved.</p>
+        </article>
       </div>
+      <p class="demo-note">Only licensed, verified facilities can see medicine listings and request or list stock.</p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Recently listed</h2>
+      <p class="section-subtitle">A limited preview; facility details and quantities are available only after sign-in.</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr>
-              <th>Medicine</th>
-              <th>Quantity</th>
-              <th>Facility</th>
-              <th>Expiry</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
+            <tr><th>Medicine</th><th>Unit</th><th>Expiry window</th></tr>
           </thead>
-          <tbody id="medicineTableBody"></tbody>
+          <tbody id="previewTableBody">
+            <tr><td colspan="3" class="empty-state">Loading recent listings...</td></tr>
+          </tbody>
         </table>
-        <p id="noResults" class="empty-state" hidden>No medicine matches your search yet.</p>
+      </div>
+      <p id="previewMessage" class="small-note" role="status" hidden></p>
+      <div class="form-actions">
+        <button type="button" id="viewMoreButton" class="btn btn-primary">View more</button>
       </div>
     </section>
   </main>
-
-  <div id="requestModal" class="modal-backdrop hidden" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h3>Request medicine</h3>
-        <button type="button" class="modal-close" id="closeRequestModal" aria-label="Close request form">×</button>
-      </div>
-      <form id="requestForm" class="form-grid">
-        <label>
-          Selected medicine
-          <input id="requestDrug" name="drug" type="text" required readonly />
-        </label>
-        <input id="requestMedicineId" name="medicineId" type="hidden" />
-        <input id="requestSupplier" name="supplierFacility" type="hidden" />
-        <label>
-          Facility name
-          <input name="facility" type="text" placeholder="Your facility or clinic" required />
-        </label>
-        <label>
-          Delivery location
-          <input name="location" type="text" placeholder="Ward, address or pickup point" required />
-        </label>
-        <label>
-          Contact person
-          <input name="contactPerson" type="text" placeholder="Name of the requesting lead" required />
-        </label>
-        <label>
-          Phone number
-          <input name="phone" type="tel" placeholder="0712345678" required />
-        </label>
-        <label>
-          Email address
-          <input name="email" type="email" placeholder="contact@facility.org" required />
-        </label>
-        <label>
-          Request details
-          <textarea name="details" placeholder="Mention needed quantity, urgency and delivery notes"></textarea>
-        </label>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Submit request</button>
-          <button type="button" class="btn btn-outline" id="cancelRequestModal">Cancel</button>
-        </div>
-      </form>
-      <p id="requestError" class="demo-note hidden text-danger mt-12"></p>
-      <p id="requestSuccess" class="demo-note hidden">Your request has been recorded. The supplying facility will
-        contact you soon.</p>
-    </div>
-  </div>
 
   <footer class="site-footer">
     <div class="footer-inner">
@@ -115,7 +88,6 @@
       <div>
         <a href="index.html">Home</a><br />
         <a href="about.html">About</a><br />
-        <a href="surplus.html">List surplus stock</a><br />
         <a href="login.html">Facility login</a><br />
         <a href="admin-login.html">Admin</a>
       </div>
@@ -123,158 +95,65 @@
   </footer>
 
   <script>
-    const medicineSearch = document.getElementById('medicineSearch');
-    const searchBtn = document.getElementById('searchBtn');
-    const medicineTableBody = document.getElementById('medicineTableBody');
-    const noResults = document.getElementById('noResults');
-    const pageError = document.getElementById('pageError');
-    const modal = document.getElementById('requestModal');
-    const requestForm = document.getElementById('requestForm');
-    const requestDrug = document.getElementById('requestDrug');
-    const requestMedicineId = document.getElementById('requestMedicineId');
-    const requestSupplier = document.getElementById('requestSupplier');
-    const requestSuccess = document.getElementById('requestSuccess');
-    const requestError = document.getElementById('requestError');
-    let approvedMedicines = [];
+    const previewTableBody = document.getElementById('previewTableBody');
+    const previewMessage = document.getElementById('previewMessage');
+    const viewMoreButton = document.getElementById('viewMoreButton');
 
-    function getStatusClass(status) {
-      return status === 'ready' ? 'green' : status === 'monitor' ? 'amber' : 'gray';
+    function showEmptyPreview() {
+      previewTableBody.replaceChildren();
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 3;
+      cell.className = 'empty-state';
+      cell.textContent = 'Listings are visible to verified facilities after login.';
+      row.append(cell);
+      previewTableBody.append(row);
     }
 
-    function showPageError(message) {
-      pageError.textContent = message;
-      pageError.classList.remove('hidden');
-    }
-
-    function hidePageError() {
-      pageError.textContent = '';
-      pageError.classList.add('hidden');
-    }
-
-    function renderMedicineTable() {
-      medicineTableBody.innerHTML = approvedMedicines
-        .map((item) => `
-          <tr class="medicine-row" data-name="${item.drug.toLowerCase()}" data-facility="${item.facility.toLowerCase()}" data-status="${item.status.toLowerCase()}">
-            <td>${item.drug}</td>
-            <td>${item.quantityLabel || `${Number(item.quantity).toLocaleString('en-KE')} ${item.unit || 'units'}`}</td>
-            <td>${item.facility}</td>
-            <td>${item.expiry}</td>
-            <td><span class="status-pill ${getStatusClass(item.status)}">${item.status === 'ready' ? 'Ready' : item.status === 'monitor' ? 'Monitor' : item.status}</span></td>
-            <td><button type="button" class="btn btn-outline request-btn" data-medicine-id="${item.id}" data-drug="${item.drug}" data-supplier="${item.facility}">Request</button></td>
-          </tr>
-        `)
-        .join('');
-
-      if (approvedMedicines.length === 0) {
-        medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No approved medicine listings are available yet.</td></tr>';
-      }
-
-      attachRequestButtons();
-      filterRows();
-    }
-
-    function attachRequestButtons() {
-      document.querySelectorAll('.request-btn').forEach((button) => {
-        button.addEventListener('click', () => {
-          requestDrug.value = button.dataset.drug;
-          requestMedicineId.value = button.dataset.medicineId;
-          requestSupplier.value = button.dataset.supplier;
-          requestForm.reset();
-          requestDrug.value = button.dataset.drug;
-          requestMedicineId.value = button.dataset.medicineId;
-          requestSupplier.value = button.dataset.supplier;
-          requestSuccess.classList.add('hidden');
-          requestError.classList.add('hidden');
-          requestError.textContent = '';
-          modal.classList.remove('hidden');
-          modal.setAttribute('aria-hidden', 'false');
-          document.querySelector('input[name="facility"]').focus();
+    async function loadPreview() {
+      try {
+        const listings = (await DawaDB.getPreviewMedicines()).slice(0, 3);
+        previewTableBody.replaceChildren();
+        if (!listings.length) {
+          showEmptyPreview();
+          return;
+        }
+        listings.forEach((listing) => {
+          const row = document.createElement('tr');
+          [listing.drug_name, listing.unit, listing.expiry_window].forEach((value) => {
+            const cell = document.createElement('td');
+            cell.textContent = value || '-';
+            row.append(cell);
+          });
+          previewTableBody.append(row);
         });
-      });
-    }
-
-    function filterRows() {
-      const query = medicineSearch.value.trim().toLowerCase();
-      const rows = Array.from(document.querySelectorAll('.medicine-row'));
-      let visibleCount = 0;
-
-      rows.forEach((row) => {
-        const haystack = `${row.dataset.name} ${row.dataset.facility} ${row.dataset.status}`.toLowerCase();
-        const matches = haystack.includes(query);
-        row.style.display = matches ? '' : 'none';
-        if (matches) visibleCount += 1;
-      });
-
-      noResults.hidden = visibleCount !== 0;
-    }
-
-    function closeModal() {
-      modal.classList.add('hidden');
-      modal.setAttribute('aria-hidden', 'true');
-    }
-
-    document.getElementById('closeRequestModal').addEventListener('click', closeModal);
-    document.getElementById('cancelRequestModal').addEventListener('click', closeModal);
-
-    modal.addEventListener('click', (event) => {
-      if (event.target === modal) closeModal();
-    });
-
-    searchBtn.addEventListener('click', filterRows);
-    medicineSearch.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        filterRows();
-      }
-    });
-
-    async function loadApprovedMedicines() {
-      hidePageError();
-      medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading medicine listings...</td></tr>';
-
-      try {
-        approvedMedicines = await DawaDB.getApprovedMedicines();
-        renderMedicineTable();
       } catch (error) {
-        medicineTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Unable to load medicine listings right now. Please try again.</td></tr>';
-        showPageError(error?.message || 'Unable to load medicine listings right now.');
+        showEmptyPreview();
+        previewMessage.textContent = error.message || 'The preview is temporarily unavailable.';
+        previewMessage.hidden = false;
       }
     }
 
-    requestForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      requestError.classList.add('hidden');
-      requestError.textContent = '';
-      requestSuccess.classList.add('hidden');
-
-      const formData = new FormData(requestForm);
-      const payload = {
-        medicine_id: requestMedicineId.value,
-        drug_name: requestDrug.value,
-        supplier_facility_name: requestSupplier.value,
-        requesting_facility: formData.get('facility'),
-        delivery_location: formData.get('location'),
-        contact_person: formData.get('contactPerson'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        details: formData.get('details') || '',
-      };
-
+    viewMoreButton.addEventListener('click', async () => {
+      viewMoreButton.disabled = true;
       try {
-        await DawaDB.submitTransferRequest(payload);
-        requestForm.reset();
-        requestSuccess.classList.remove('hidden');
-        setTimeout(() => {
-          closeModal();
-          requestSuccess.classList.add('hidden');
-        }, 2600);
+        const session = await DawaDB.getSession();
+        if (!session) {
+          window.location.href = 'login.html';
+          return;
+        }
+        window.location.href = (await DawaDB.getRole()) === 'admin'
+          ? 'admin-dashboard.html'
+          : 'facility-dashboard.html';
       } catch (error) {
-        requestError.textContent = error?.message || 'Unable to submit your request right now.';
-        requestError.classList.remove('hidden');
+        previewMessage.textContent = error.message || 'Unable to open the dashboard.';
+        previewMessage.hidden = false;
+        viewMoreButton.disabled = false;
       }
     });
 
-    loadApprovedMedicines();
+    DawaDB.initializeNavigation();
+    loadPreview();
   </script>
 </body>
 

@@ -1,11 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Dawa Track</title>
+  <title>Facility account | Dawa Track</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
 </head>
 
 <body>
@@ -15,34 +18,102 @@
       <div class="nav-links">
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
-        <a href="surplus.html">Surplus stock</a>
-        <a class="active" href="login.html">Login</a>
+        <a class="active" href="login.html" data-nav-login>Login</a>
+        <a href="facility-dashboard.html" data-nav-dashboard hidden>Dashboard</a>
+        <button type="button" class="btn btn-outline" data-nav-logout hidden>Log out</button>
       </div>
-      <a href="surplus.html" class="btn btn-outline">Register stock</a>
+      <span class="small-note" data-nav-status role="status" hidden></span>
     </nav>
   </header>
 
   <main class="page">
-    <section class="form-card">
-      <h2 class="section-title">Facility login</h2>
-      <p class="section-subtitle">Access your dashboard and manage requests.</p>
-      <form class="form-grid" action="dashboard.html" method="get">
-        <label>
-          Email address
-          <input type="email" id="email" name="email" placeholder="facility@example.org" value="demo@dawatrack.org" required />
-        </label>
-        <label>
-          Password
-          <input type="password" id="password" name="password" placeholder="Enter your password" value="demo1234" required />
-        </label>
-        <div class="demo-note">
-          Demo credentials: <strong>demo@dawatrack.org</strong> / <strong>demo1234</strong>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Log in</button>
-          <a href="surplus.html" class="btn btn-outline">List surplus stock</a>
-        </div>
-      </form>
+    <section class="form-card account-card">
+      <h1 class="section-title">Facility account</h1>
+      <p class="section-subtitle">Sign in or register a licensed facility.</p>
+      <div class="account-tabs" role="tablist" aria-label="Facility account">
+        <button id="loginTab" class="btn btn-outline active" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Log in</button>
+        <button id="signupTab" class="btn btn-outline" type="button" role="tab" aria-selected="false" aria-controls="signupPanel">Create account</button>
+      </div>
+
+      <section id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
+        <form id="loginForm" class="form-grid">
+          <label>Email address
+            <input type="email" id="email" name="email" autocomplete="email" required />
+          </label>
+          <label>Password
+            <input type="password" id="password" name="password" autocomplete="current-password" required />
+          </label>
+          <a id="forgotPassword" href="#" class="text-link">Forgot password?</a>
+          <p id="loginError" class="notice notice-error" role="alert" hidden></p>
+          <p id="resetMessage" class="notice notice-success" role="status" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Log in</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="signupPanel" role="tabpanel" aria-labelledby="signupTab" hidden>
+        <form id="signupForm" class="form-grid">
+          <fieldset class="form-section">
+            <legend>Facility details</legend>
+            <label>Facility name *
+              <input name="facility_name" type="text" maxlength="200" autocomplete="organization" required />
+            </label>
+            <label>Facility type *
+              <select name="facility_type" required>
+                <option value="">Select a facility type</option>
+                <option value="hospital">Hospital</option>
+                <option value="health_centre">Health centre</option>
+                <option value="clinic">Clinic</option>
+                <option value="pharmacy">Pharmacy</option>
+                <option value="warehouse">Warehouse</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label>County *
+              <input name="county" type="text" maxlength="100" autocomplete="address-level1" required />
+            </label>
+            <label>Physical address
+              <input name="address" type="text" maxlength="300" autocomplete="street-address" />
+            </label>
+            <label>PPB / facility licence number *
+              <input name="licence_number" type="text" maxlength="100" required />
+            </label>
+          </fieldset>
+
+          <fieldset class="form-section">
+            <legend>Contact and account</legend>
+            <label>Contact person *
+              <input name="contact_person" type="text" maxlength="150" autocomplete="name" required />
+            </label>
+            <label>Role / title
+              <input name="contact_role" type="text" maxlength="100" />
+            </label>
+            <label>Phone number *
+              <input name="phone" type="tel" maxlength="30" autocomplete="tel" required />
+            </label>
+            <label>Email address *
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label>Password * (at least 8 characters)
+              <input name="password" type="password" minlength="8" autocomplete="new-password" required />
+            </label>
+            <label>Confirm password *
+              <input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required />
+            </label>
+            <label class="check-label">
+              <input name="licensed_confirmation" type="checkbox" required />
+              <span>I confirm these details are accurate and this facility is licensed to hold pharmaceutical products. *</span>
+            </label>
+          </fieldset>
+
+          <p id="signupError" class="notice notice-error grid-full" role="alert" hidden></p>
+          <p id="signupSuccess" class="notice notice-success grid-full" role="status" hidden>Account created. Check your email to confirm your address, then log in. Your facility will be able to view listings now, and request or list stock once an administrator verifies it.</p>
+          <div class="form-actions grid-full">
+            <button id="signupButton" type="submit" class="btn btn-primary">Create account</button>
+          </div>
+        </form>
+      </section>
     </section>
   </main>
 
@@ -50,17 +121,127 @@
     <div class="footer-inner">
       <div>
         <strong>Dawa Track</strong>
-        <p>Sign in to coordinate logistics and approvals.</p>
+        <p>Helping facilities move medicine before it becomes waste.</p>
       </div>
       <div>
         <a href="index.html">Home</a><br />
         <a href="about.html">About</a><br />
-        <a href="surplus.html">List surplus stock</a><br />
         <a href="login.html">Facility login</a><br />
         <a href="admin-login.html">Admin</a>
       </div>
     </div>
   </footer>
+
+  <script>
+    const loginTab = document.getElementById('loginTab');
+    const signupTab = document.getElementById('signupTab');
+    const loginPanel = document.getElementById('loginPanel');
+    const signupPanel = document.getElementById('signupPanel');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const loginError = document.getElementById('loginError');
+    const signupError = document.getElementById('signupError');
+    const signupSuccess = document.getElementById('signupSuccess');
+    const signupButton = document.getElementById('signupButton');
+
+    function setActiveTab(tab) {
+      const showSignup = tab === 'signup';
+      signupPanel.hidden = !showSignup;
+      loginPanel.hidden = showSignup;
+      signupTab.setAttribute('aria-selected', String(showSignup));
+      loginTab.setAttribute('aria-selected', String(!showSignup));
+      signupTab.classList.toggle('active', showSignup);
+      loginTab.classList.toggle('active', !showSignup);
+    }
+
+    async function goToDashboard() {
+      window.location.href = (await DawaDB.getRole()) === 'admin'
+        ? 'admin-dashboard.html'
+        : 'facility-dashboard.html';
+    }
+
+    loginTab.addEventListener('click', () => setActiveTab('login'));
+    signupTab.addEventListener('click', () => setActiveTab('signup'));
+
+    document.getElementById('forgotPassword').addEventListener('click', async (event) => {
+      event.preventDefault();
+      const resetMessage = document.getElementById('resetMessage');
+      resetMessage.hidden = true;
+      loginError.hidden = true;
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        loginError.textContent = 'Enter your email address first.';
+        loginError.hidden = false;
+        document.getElementById('email').focus();
+        return;
+      }
+      try {
+        await DawaDB.resetPasswordForEmail(email);
+        resetMessage.textContent = 'If an account exists for that address, a password reset email has been sent.';
+        resetMessage.hidden = false;
+      } catch (error) {
+        loginError.textContent = error.message || 'Unable to send a password reset email.';
+        loginError.hidden = false;
+      }
+    });
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      loginError.hidden = true;
+      const button = loginForm.querySelector('[type="submit"]');
+      button.disabled = true;
+      try {
+        await DawaDB.signIn(document.getElementById('email').value, document.getElementById('password').value);
+        await goToDashboard();
+      } catch (error) {
+        loginError.textContent = error.message || 'Incorrect email or password.';
+        loginError.hidden = false;
+        button.disabled = false;
+      }
+    });
+
+    signupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      signupError.hidden = true;
+      signupSuccess.hidden = true;
+      const formData = new FormData(signupForm);
+      const values = Object.fromEntries(formData.entries());
+      if (values.password !== values.confirm_password) {
+        signupError.textContent = 'Passwords do not match.';
+        signupError.hidden = false;
+        signupForm.elements.confirm_password.focus();
+        return;
+      }
+
+      signupButton.disabled = true;
+      try {
+        const result = await DawaDB.signUpFacility(values);
+        if (result.needsEmailConfirmation) {
+          signupSuccess.hidden = false;
+          signupForm.reset();
+        } else {
+          await goToDashboard();
+        }
+      } catch (error) {
+        signupError.textContent = error.message || 'Unable to create your account.';
+        signupError.hidden = false;
+      } finally {
+        signupButton.disabled = false;
+      }
+    });
+
+    DawaDB.initializeNavigation();
+    if (new URLSearchParams(window.location.search).get('mode') === 'signup') {
+      setActiveTab('signup');
+    }
+    DawaDB.getSession().then((session) => {
+      if (session) return goToDashboard();
+      return null;
+    }).catch((error) => {
+      loginError.textContent = error.message || 'Unable to check your sign-in status.';
+      loginError.hidden = false;
+    });
+  </script>
 </body>
 
 </html>

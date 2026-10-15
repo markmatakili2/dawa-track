@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About Dawa Track</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
 </head>
 
 <body>
@@ -15,48 +18,44 @@
       <div class="nav-links">
         <a href="index.html">Home</a>
         <a class="active" href="about.html">About</a>
-        <a href="surplus.html">Surplus stock</a>
-        <a href="login.html">Login</a>
+        <a href="login.html" data-nav-login>Login</a>
+        <a href="facility-dashboard.html" data-nav-dashboard hidden>Dashboard</a>
+        <button type="button" class="btn btn-outline" data-nav-logout hidden>Log out</button>
       </div>
-      <a href="surplus.html" class="btn btn-primary">List surplus stock</a>
+      <span class="small-note" data-nav-status role="status" hidden></span>
     </nav>
   </header>
 
   <main class="page">
     <section class="hero-card">
       <h1>Before expiry, not after.</h1>
-      <p>Dawa Track helps hospitals and warehouses move short-dated medicine to where it is needed most.</p>
+      <p>Dawa Track helps licensed facilities coordinate medicine transfers before usable stock expires.</p>
     </section>
 
     <section class="card">
-      <h2 class="section-title">How the platform works</h2>
-      <p class="section-subtitle">Facilities can browse available stock, list surplus medicine, and log in to manage requests from one place.</p>
+      <h2 class="section-title">A trusted facility network</h2>
+      <p class="section-subtitle">Only licensed, verified facilities can access medicine listings and coordinate stock requests.</p>
       <div class="feature-grid">
-        <div class="feature">
-          <h3>List surplus stock</h3>
-          <p>Hospitals and warehouses report medicine they cannot use in time.</p>
-        </div>
-        <div class="feature">
-          <h3>Browse available medicine</h3>
-          <p>Facilities see what is close to expiry and still suitable for transfer.</p>
-        </div>
-        <div class="feature">
-          <h3>Request or approve</h3>
-          <p>Request stock or approve incoming requests through the facility workflow.</p>
-        </div>
-        <div class="feature">
-          <h3>Track the handover</h3>
-          <p>Every transfer is logged for visibility and audit readiness.</p>
-        </div>
+        <article class="feature">
+          <h3>Register your facility</h3>
+          <p>Submit facility licensing and contact details to create an account.</p>
+        </article>
+        <article class="feature">
+          <h3>Administrator verification</h3>
+          <p>Administrators review each facility before it can request or list medicine.</p>
+        </article>
+        <article class="feature">
+          <h3>Coordinate transfers</h3>
+          <p>Browse suitable stock, make requests and track transfer progress in one place.</p>
+        </article>
       </div>
     </section>
 
     <section class="card">
-      <h2 class="section-title">Start here</h2>
-      <p class="section-subtitle">Choose the section that fits your goal.</p>
+      <h2 class="section-title">Get started</h2>
+      <p class="section-subtitle">Create an account or sign in to continue.</p>
       <div class="form-actions">
-        <a href="index.html" class="btn btn-primary">Browse available medicine</a>
-        <a href="surplus.html" class="btn btn-outline">List your surplus stock</a>
+        <a href="login.html?mode=signup" class="btn btn-primary">Register your facility</a>
         <a href="login.html" class="btn btn-outline">Facility login</a>
       </div>
     </section>
@@ -71,12 +70,13 @@
       <div>
         <a href="index.html">Home</a><br />
         <a href="about.html">About</a><br />
-        <a href="surplus.html">List surplus stock</a><br />
         <a href="login.html">Facility login</a><br />
         <a href="admin-login.html">Admin</a>
       </div>
     </div>
   </footer>
+
+  <script>DawaDB.initializeNavigation();</script>
 </body>
 
 </html>

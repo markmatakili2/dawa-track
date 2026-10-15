@@ -1,729 +1,685 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dawa Track Admin</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
-    <script src="config.js"></script>
-    <script src="db.js"></script>
-    <style>
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            padding: 12px max(16px, calc((100% - 1072px) / 2));
-            background: var(--surface);
-            border-bottom: 1px solid var(--line);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin dashboard | Dawa Track</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+  <style>
+    .admin-topbar {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
 
-        .brand {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+    .admin-title {
+      margin: 0;
+      font-size: 22px;
+    }
 
-        .page-title {
-            font-size: 28px;
-            font-weight: 600;
-            margin: 0;
-        }
+    .admin-shell {
+      max-width: 1120px;
+      min-height: 56vh;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+      display: flex;
+      gap: 20px;
+    }
 
-        .tagline {
-            font-size: 13px;
-            color: var(--muted);
-        }
+    .admin-sidebar {
+      width: 220px;
+      flex: 0 0 220px;
+      padding: 8px 0;
+      border-right: 1px solid var(--line);
+      background: var(--surface);
+    }
 
-        .logout-btn {
-            border: 1px solid var(--line);
-            background: transparent;
-            color: var(--ink);
-            border-radius: 6px;
-            padding: 9px 16px;
-            min-height: 44px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+    .admin-nav-item {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 16px;
+      border: 0;
+      border-left: 3px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      font-weight: 600;
+      cursor: pointer;
+    }
 
-        .logout-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary-dark);
-        }
+    .admin-nav-item.active {
+      border-left-color: var(--primary);
+      background: var(--primary-tint);
+      color: var(--primary-dark);
+    }
 
-        .shell {
-            display: flex;
-            min-height: calc(100vh - 72px);
-        }
+    .admin-main {
+      min-width: 0;
+      flex: 1;
+      padding: 20px 0;
+    }
 
-        .sidebar {
-            width: 240px;
-            flex-shrink: 0;
-            background: var(--surface);
-            border-right: 1px solid var(--line);
-            padding: 24px 0;
-        }
+    .admin-main .section-header {
+      margin-bottom: 16px;
+    }
 
-        .nav-item {
-            padding: 14px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--muted);
-            cursor: pointer;
-            border-left: 4px solid transparent;
-        }
+    .admin-metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
 
-        .nav-item.active {
-            color: var(--primary-dark);
-            background: var(--primary-tint);
-            border-left-color: var(--primary);
-        }
+    .admin-metrics .metric-card {
+      min-width: 0;
+    }
 
-        .main {
-            flex: 1;
-            padding: 28px;
-            background: var(--bg);
-            max-width: 100%;
-            min-width: 0;
-        }
+    .admin-status {
+      max-width: 1072px;
+      margin: 0 auto;
+      padding: 8px 24px;
+    }
 
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
-        }
+    .admin-status:not([hidden]) {
+      margin-top: 8px;
+    }
 
-        .section-header h1 {
-            font-size: 28px;
-            margin: 0;
-        }
+    .admin-table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+    }
 
-        .card-list {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-        }
+    .admin-table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: collapse;
+    }
 
-        .card {
-            overflow-x: auto;
-        }
+    .admin-table th,
+    .admin-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
 
-        .table-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
-        }
+    .admin-table th {
+      background: var(--bg);
+      color: var(--table-header);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
 
-        .wide-table {
-            width: 100%;
-            min-width: 760px;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
+    .verification-note {
+      min-width: 180px;
+      min-height: 72px;
+      margin-bottom: 8px;
+    }
 
-        .wide-table th,
-        .wide-table td {
-            border-bottom: 1px solid var(--line);
-            padding: 12px 10px;
-            text-align: left;
-            vertical-align: top;
-        }
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 220px;
+    }
 
-        .wide-table th {
-            font-size: 12px;
-            color: #435062;
-            text-transform: uppercase;
-        }
+    .admin-form {
+      max-width: 720px;
+      margin-top: 16px;
+    }
 
-        .tab-panel {
-            margin-top: 12px;
-        }
+    .admin-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
 
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+    .admin-form-grid .grid-full {
+      grid-column: 1 / -1;
+    }
 
-        .badge.new {
-            background: var(--warning-tint);
-            color: var(--warning-ink);
-        }
+    .admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
 
-        .badge.contacted {
-            background: var(--primary-tint);
-            color: var(--primary-dark);
-        }
+    @media (max-width: 900px) {
+      .admin-shell {
+        flex-direction: column;
+      }
 
-        .badge.resolved {
-            background: var(--success-tint);
-            color: var(--success-ink);
-        }
+      .admin-sidebar {
+        display: flex;
+        width: 100%;
+        flex: 0 0 auto;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
 
-        .badge.approved {
-            background: var(--success-tint);
-            color: var(--success-ink);
-        }
+      .admin-nav-item {
+        width: auto;
+        flex: 0 0 auto;
+      }
 
-        .badge.pending {
-            background: var(--warning-tint);
-            color: var(--warning-ink);
-        }
+      .admin-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
 
-        .badge.rejected {
-            background: var(--danger-tint);
-            color: var(--danger);
-        }
+    @media (max-width: 600px) {
+      .admin-topbar,
+      .admin-shell {
+        padding-right: 16px;
+        padding-left: 16px;
+      }
 
-        .status-banner {
-            margin: 18px 28px 0;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            display: none;
-        }
+      .admin-topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
 
-        .status-banner.visible {
-            display: block;
-        }
+      .admin-main {
+        padding-top: 12px;
+      }
 
-        .status-banner.success {
-            background: var(--success-tint);
-            color: var(--success-ink);
-            border: 1px solid var(--line);
-        }
+      .admin-metrics,
+      .admin-form-grid {
+        grid-template-columns: 1fr;
+      }
 
-        .status-banner.error {
-            background: var(--danger-tint);
-            color: var(--danger);
-            border: 1px solid var(--line);
-        }
+      .admin-form-grid .grid-full {
+        grid-column: auto;
+      }
 
-        .form-grid {
-            display: grid;
-            gap: 16px;
-        }
+      .admin-actions {
+        flex-direction: column;
+      }
 
-        .form-grid.small {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+      .admin-actions .btn {
+        width: 100%;
+      }
 
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            font-weight: 600;
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        input,
-        select,
-        textarea {
-            min-height: 44px;
-            padding: 9px 12px;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            font: inherit;
-            width: 100%;
-            background: var(--surface);
-            color: var(--ink);
-        }
-
-        textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
-
-        .small-note {
-            margin: 0;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @media (max-width: 900px) {
-            .shell {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                display: flex;
-                width: 100%;
-                overflow-x: auto;
-                border-right: none;
-                border-bottom: 1px solid var(--line);
-                padding: 8px 0;
-            }
-
-            .nav-item {
-                flex: 0 0 auto;
-                padding: 10px 16px;
-            }
-
-            .card-list {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 600px) {
-            .topbar {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .main {
-                padding: 20px 16px;
-            }
-
-            .card-list,
-            .form-grid.small {
-                grid-template-columns: 1fr;
-            }
-
-            .grid-span-two {
-                grid-column: 1 / -1;
-            }
-
-            .form-actions {
-                flex-direction: column;
-            }
-
-            .form-actions .btn {
-                width: 100%;
-            }
-        }
-
-        .admin-login-card {
-            max-width: 520px;
-        }
-    </style>
+      .admin-status {
+        padding-right: 16px;
+        padding-left: 16px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <div class="topbar">
-        <div class="brand">
-            <h1 class="page-title">Dawa Track Admin</h1>
-            <p class="tagline">Review facilities, approve listings, and manage transfer requests.</p>
-        </div>
-        <button class="logout-btn" id="logoutButton">Log out</button>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="index.html" class="logo"><span class="dot"></span>Dawa Track</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="login.html" data-nav-login>Login</a>
+        <a class="active" href="admin-dashboard.html" data-nav-dashboard hidden>Dashboard</a>
+        <button type="button" class="btn btn-outline" data-nav-logout hidden>Log out</button>
+      </div>
+      <span class="small-note" data-nav-status role="status" hidden></span>
+    </nav>
+  </header>
+
+  <div class="admin-topbar">
+    <div>
+      <h1 class="admin-title">Admin dashboard</h1>
+      <p class="small-note">Verify facilities, approve listings and manage transfer requests.</p>
     </div>
+  </div>
+  <div id="adminStatus" class="admin-status notice" role="status" aria-live="polite" hidden></div>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar" aria-label="Admin sections"></aside>
+    <main id="adminMain" class="admin-main"></main>
+  </div>
 
-    <div id="adminStatus" class="status-banner" role="status" aria-live="polite"></div>
-
-    <div class="shell">
-        <aside class="sidebar" id="sidebar"></aside>
-        <main class="main" id="main"></main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Dawa Track</strong>
+        <p>Helping facilities move medicine before it becomes waste.</p>
+      </div>
+      <div>
+        <a href="index.html">Home</a><br />
+        <a href="about.html">About</a><br />
+        <a href="login.html">Facility login</a><br />
+        <a href="admin-login.html">Admin</a>
+      </div>
     </div>
+  </footer>
 
-    <script>
-        (async function () {
-            const tabs = [
-                { id: 'overview', label: 'Overview' },
-                { id: 'facilities', label: 'Facilities' },
-                { id: 'medicine', label: 'Medicine Listings' },
-                { id: 'requests', label: 'Transfer Requests' },
-            ];
+  <script>
+    const adminMain = document.getElementById('adminMain');
+    const adminSidebar = document.getElementById('adminSidebar');
+    const adminStatus = document.getElementById('adminStatus');
+    const adminTabs = [
+      { id: 'overview', label: 'Overview' },
+      { id: 'verification', label: 'Facility verification' },
+      { id: 'medicine', label: 'Medicine Listings' },
+      { id: 'requests', label: 'Transfer Requests' },
+    ];
+    let activeTab = 'overview';
+    let verificationFilter = 'pending';
+    let facilityProfiles = [];
 
-            let activeTab = 'overview';
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      if (text !== undefined && text !== null) node.textContent = String(text);
+      if (className) node.className = className;
+      return node;
+    }
 
-            function setStatus(message, tone = 'info') {
-                const status = document.getElementById('adminStatus');
-                status.textContent = message || '';
-                status.className = `status-banner ${tone === 'error' ? 'error' : tone === 'success' ? 'success' : ''} ${message ? 'visible' : ''}`.trim();
+    function setStatus(message, tone) {
+      adminStatus.textContent = message || '';
+      adminStatus.className = `admin-status notice ${tone === 'error' ? 'notice-error' : 'notice-success'}`;
+      adminStatus.hidden = !message;
+    }
+
+    function makeTable(headers) {
+      const wrapper = element('div', null, 'admin-table-wrap');
+      const table = element('table', null, 'admin-table');
+      const head = document.createElement('thead');
+      const row = document.createElement('tr');
+      headers.forEach((header) => row.append(element('th', header)));
+      head.append(row);
+      table.append(head);
+      const body = document.createElement('tbody');
+      table.append(body);
+      wrapper.append(table);
+      return { wrapper, body };
+    }
+
+    function badge(status) {
+      const style = {
+        pending: 'amber',
+        approved: 'green',
+        rejected: 'red',
+        suspended: 'red',
+        new: 'amber',
+        contacted: 'teal',
+        resolved: 'green',
+      }[status] || 'gray';
+      return element('span', status[0].toUpperCase() + status.slice(1), `badge ${style}`);
+    }
+
+    function appendCell(row, text) {
+      row.append(element('td', text || '—'));
+    }
+
+    function renderSidebar() {
+      adminSidebar.replaceChildren();
+      adminTabs.forEach((tab) => {
+        const button = element('button', tab.label, `admin-nav-item${tab.id === activeTab ? ' active' : ''}`);
+        button.type = 'button';
+        button.setAttribute('aria-current', tab.id === activeTab ? 'page' : 'false');
+        button.addEventListener('click', () => {
+          activeTab = tab.id;
+          renderMain();
+        });
+        adminSidebar.append(button);
+      });
+    }
+
+    async function renderOverview() {
+      adminMain.replaceChildren(
+        element('div', null, 'section-header'),
+      );
+      const header = adminMain.firstChild;
+      header.append(element('h2', 'Overview'));
+      const note = element('p', 'Live counts from the connected Supabase database.', 'small-note');
+      header.append(note);
+      const counts = await DawaDB.getAdminCounts();
+      const metrics = [
+        ['Verified facilities', counts.verifiedFacilities],
+        ['Pending verifications', counts.pendingVerifications],
+        ['Approved listings', counts.approvedListings],
+        ['Pending listings', counts.pendingListings],
+        ['Open transfer requests', counts.openRequests],
+      ];
+      const grid = element('div', null, 'admin-metrics');
+      metrics.forEach(([label, value]) => {
+        const card = element('article', null, 'metric-card');
+        card.append(element('div', label, 'metric-label'), element('div', value, 'metric-value'));
+        grid.append(card);
+      });
+      adminMain.append(grid);
+    }
+
+    function verificationActions(profile, row, notes) {
+      const actions = element('div', null, 'row-actions');
+      const addAction = (label, status, needsNote = false) => {
+        const button = element('button', label, status === 'approved' ? 'btn btn-primary' : 'btn btn-outline');
+        button.type = 'button';
+        button.addEventListener('click', async () => {
+          const note = notes.value.trim();
+          if (needsNote && !note) {
+            setStatus(`Add a note before you ${status} this facility.`, 'error');
+            notes.focus();
+            return;
+          }
+          button.disabled = true;
+          try {
+            await DawaDB.setFacilityVerification(profile.userId, status, note);
+            facilityProfiles = await DawaDB.getFacilityProfiles('all');
+            setStatus(`Facility ${status === 'approved' ? 'approved' : status === 'pending' ? 'reactivated' : status}.`, 'success');
+            await renderVerification();
+          } catch (error) {
+            setStatus(error.message || 'Unable to update facility verification.', 'error');
+            button.disabled = false;
+          }
+        });
+        actions.append(button);
+      };
+
+      if (profile.verificationStatus !== 'approved') addAction(profile.verificationStatus === 'pending' ? 'Approve' : 'Reactivate', 'approved');
+      if (profile.verificationStatus !== 'rejected') addAction('Reject', 'rejected', true);
+      if (profile.verificationStatus !== 'suspended') addAction('Suspend', 'suspended', true);
+      row.append(actions);
+    }
+
+    async function renderVerification() {
+      adminMain.replaceChildren();
+      const header = element('div', null, 'section-header');
+      header.append(element('h2', 'Facility verification'));
+      header.append(element('p', 'Review submitted facility details and manage account access.', 'small-note'));
+      adminMain.append(header);
+      facilityProfiles = await DawaDB.getFacilityProfiles('all');
+
+      const filters = element('div', null, 'filter-chips');
+      const counts = Object.fromEntries(['pending', 'approved', 'rejected', 'suspended'].map((status) => [
+        status,
+        facilityProfiles.filter((profile) => profile.verificationStatus === status).length,
+      ]));
+      const options = [
+        ['pending', `Pending (${counts.pending})`],
+        ['approved', `Approved (${counts.approved})`],
+        ['rejected', `Rejected (${counts.rejected})`],
+        ['suspended', `Suspended (${counts.suspended})`],
+        ['all', `All (${facilityProfiles.length})`],
+      ];
+      options.forEach(([value, label]) => {
+        const button = element('button', label, `btn btn-outline${verificationFilter === value ? ' active' : ''}`);
+        button.type = 'button';
+        button.setAttribute('aria-pressed', String(verificationFilter === value));
+        button.addEventListener('click', () => {
+          verificationFilter = value;
+          renderVerification().catch((error) => setStatus(error.message || 'Unable to load facility profiles.', 'error'));
+        });
+        filters.append(button);
+      });
+      adminMain.append(filters);
+
+      const profiles = verificationFilter === 'all'
+        ? facilityProfiles
+        : facilityProfiles.filter((profile) => profile.verificationStatus === verificationFilter);
+      const table = makeTable(['Facility', 'Type', 'County', 'Licence number', 'Contact person', 'Role', 'Phone', 'Email', 'Registered', 'Status', 'Review actions']);
+      profiles.forEach((profile) => {
+        const row = document.createElement('tr');
+        appendCell(row, profile.facilityName);
+        appendCell(row, profile.facilityType.replaceAll('_', ' '));
+        appendCell(row, profile.county);
+        appendCell(row, profile.licenceNumber);
+        appendCell(row, profile.contactPerson);
+        appendCell(row, profile.contactRole);
+        const phoneCell = document.createElement('td');
+        if (profile.phone) {
+          const phone = element('a', profile.phone);
+          phone.href = `tel:${profile.phone}`;
+          phoneCell.append(phone);
+        } else phoneCell.textContent = '—';
+        row.append(phoneCell);
+        const emailCell = document.createElement('td');
+        if (profile.email) {
+          const email = element('a', profile.email);
+          email.href = `mailto:${profile.email}`;
+          emailCell.append(email);
+        } else emailCell.textContent = '—';
+        row.append(emailCell);
+        appendCell(row, profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-GB') : '—');
+        const statusCell = document.createElement('td');
+        statusCell.append(badge(profile.verificationStatus));
+        row.append(statusCell);
+        const actionCell = document.createElement('td');
+        const notes = element('textarea', null, 'verification-note');
+        notes.placeholder = 'Required for rejection or suspension';
+        notes.setAttribute('aria-label', `Review notes for ${profile.facilityName}`);
+        verificationActions(profile, actionCell, notes);
+        const actions = actionCell.querySelector('.row-actions');
+        actionCell.insertBefore(notes, actions);
+        row.append(actionCell);
+        table.body.append(row);
+      });
+      if (!profiles.length) {
+        const row = document.createElement('tr');
+        const cell = element('td', 'No facilities match this filter.', 'empty-state');
+        cell.colSpan = 11;
+        row.append(cell);
+        table.body.append(row);
+      }
+      adminMain.append(table.wrapper);
+    }
+
+    function renderMedicineForm() {
+      const card = element('section', null, 'card admin-form');
+      card.append(element('h3', 'Add approved listing'));
+      const form = element('form', null, 'admin-form-grid');
+      const fields = [
+        ['Medicine name *', 'drug', 'text'],
+        ['Quantity *', 'quantity', 'number'],
+        ['Unit', 'unit', 'text'],
+        ['Facility name *', 'facility', 'text'],
+        ['Expiry date *', 'expiry', 'date'],
+      ];
+      fields.forEach(([fieldLabel, name, type]) => {
+        const label = element('label', fieldLabel);
+        const input = element('input');
+        input.name = name;
+        input.type = type;
+        input.required = fieldLabel.includes('*');
+        if (name === 'quantity') input.min = '1';
+        if (name === 'unit') input.value = 'units';
+        label.append(input);
+        form.append(label);
+      });
+      const statusLabel = element('label', 'Stock status');
+      const status = element('select');
+      status.name = 'status';
+      [['ready', 'Ready'], ['monitor', 'Monitor']].forEach(([value, label]) => {
+        const option = element('option', label);
+        option.value = value;
+        status.append(option);
+      });
+      statusLabel.append(status);
+      form.append(statusLabel);
+      const actions = element('div', null, 'admin-actions grid-full');
+      const button = element('button', 'Add listing', 'btn btn-primary');
+      button.type = 'submit';
+      actions.append(button);
+      form.append(actions);
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        button.disabled = true;
+        try {
+          await DawaDB.adminAddMedicine(Object.fromEntries(new FormData(form).entries()));
+          setStatus('Listing added.', 'success');
+          await renderMain();
+        } catch (error) {
+          setStatus(error.message || 'Unable to add the listing.', 'error');
+          button.disabled = false;
+        }
+      });
+      card.append(form);
+      return card;
+    }
+
+    async function renderMedicines() {
+      adminMain.replaceChildren();
+      const header = element('div', null, 'section-header');
+      header.append(element('h2', 'Medicine Listings'));
+      header.append(element('p', 'Approve pending stock and manage active listings.', 'small-note'));
+      adminMain.append(header);
+      const medicines = await DawaDB.getAllMedicines();
+      const table = makeTable(['Medicine', 'Quantity', 'Facility / listed by', 'Expiry', 'Status', 'Action']);
+      medicines.forEach((item) => {
+        const row = document.createElement('tr');
+        appendCell(row, item.drug);
+        appendCell(row, item.quantityLabel);
+        appendCell(row, item.facility);
+        appendCell(row, item.expiry);
+        const statusCell = document.createElement('td');
+        statusCell.append(badge(item.approval));
+        row.append(statusCell);
+        const actionCell = document.createElement('td');
+        const actions = element('div', null, 'row-actions');
+        const addButton = (label, className, action) => {
+          const button = element('button', label, className);
+          button.type = 'button';
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            try {
+              await action();
+              setStatus(`Listing ${label.toLowerCase()}.`, 'success');
+              await renderMain();
+            } catch (error) {
+              setStatus(error.message || 'Unable to update the listing.', 'error');
+              button.disabled = false;
             }
+          });
+          actions.append(button);
+        };
+        if (item.approval === 'pending') {
+          addButton('Approve', 'btn btn-primary', () => DawaDB.approveMedicine(item.id));
+          addButton('Reject', 'btn btn-outline', () => DawaDB.rejectMedicine(item.id));
+        } else {
+          addButton('Remove', 'btn btn-outline', () => DawaDB.removeMedicine(item.id));
+        }
+        actionCell.append(actions);
+        row.append(actionCell);
+        table.body.append(row);
+      });
+      if (!medicines.length) {
+        const row = document.createElement('tr');
+        const cell = element('td', 'No medicine listings are available.', 'empty-state');
+        cell.colSpan = 6;
+        row.append(cell);
+        table.body.append(row);
+      }
+      const wrapper = element('section', null, 'card');
+      wrapper.append(table.wrapper);
+      adminMain.append(wrapper, renderMedicineForm());
+    }
 
-            function renderSidebar() {
-                const sidebar = document.getElementById('sidebar');
-                sidebar.innerHTML = tabs
-                    .map((tab) => `<div class="nav-item${tab.id === activeTab ? ' active' : ''}" data-tab="${tab.id}">${tab.label}</div>`)
-                    .join('');
-
-                sidebar.querySelectorAll('.nav-item').forEach((item) => {
-                    item.addEventListener('click', () => {
-                        activeTab = item.dataset.tab;
-                        renderMain();
-                    });
-                });
-            }
-
-            async function fetchDashboardData() {
-                const [facilities, medicines, transferRequests] = await Promise.all([
-                    DawaDB.getFacilities(),
-                    DawaDB.getAllMedicines(),
-                    DawaDB.getTransferRequests(),
-                ]);
-
-                return { facilities, medicines, transferRequests };
-            }
-
-            async function renderMain() {
-                renderSidebar();
-                const main = document.getElementById('main');
-
-                try {
-                    const data = await fetchDashboardData();
-                    const approvedCount = data.medicines.filter((item) => item.approval === 'approved').length;
-                    const pendingCount = data.medicines.filter((item) => item.approval === 'pending').length;
-                    const openRequests = data.transferRequests.filter((request) => request.status !== 'resolved').length;
-
-                    if (activeTab === 'overview') {
-                        main.innerHTML = `
-                        <div class="section-header">
-                            <div>
-                                <h1>Overview</h1>
-                                <p class="small-note">Live counts from the connected Supabase database.</p>
-                            </div>
-                        </div>
-                        <div class="card-list">
-                            <div class="metric-card">
-                                <div class="metric-label">Facilities</div>
-                                <div class="metric-value">${data.facilities.length}</div>
-                                <p>Registered facilities in the system.</p>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Approved listings</div>
-                                <div class="metric-value">${approvedCount}</div>
-                                <p>Medicine listings visible on the home page.</p>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Pending approvals</div>
-                                <div class="metric-value">${pendingCount}</div>
-                                <p>Surplus listings waiting for admin review.</p>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Open requests</div>
-                                <div class="metric-value">${openRequests}</div>
-                                <p>Transfer requests that still need processing.</p>
-                            </div>
-                        </div>
-                        `;
-                    }
-
-                    if (activeTab === 'facilities') {
-                        main.innerHTML = `
-                        <div class="section-header">
-                            <div>
-                                <h1>Facilities</h1>
-                                <p class="small-note">Manage registered facilities and add new partners.</p>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <table class="wide-table">
-                                <thead>
-                                    <tr><th>Name</th><th>County</th><th>Contact person</th><th>Phone</th><th>Email</th><th>Action</th></tr>
-                                </thead>
-                                <tbody>
-                                    ${data.facilities
-                                        .map((facility) => `
-                                            <tr>
-                                                <td>${facility.name}</td>
-                                                <td>${facility.county || '-'}</td>
-                                                <td>${facility.contactPerson || '-'}</td>
-                                                <td>${facility.phone ? `<a href="tel:${facility.phone}">${facility.phone}</a>` : '-'}</td>
-                                                <td>${facility.email ? `<a href="mailto:${facility.email}">${facility.email}</a>` : '-'}</td>
-                                                <td><button class="btn btn-outline remove-facility" data-id="${facility.id}">Remove</button></td>
-                                            </tr>
-                                        `)
-                                        .join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="card">
-                            <h3>Add facility</h3>
-                            <form id="facilityForm" class="form-grid small">
-                                <label class="field">
-                                    Name
-                                    <input name="name" required />
-                                </label>
-                                <label class="field">
-                                    County
-                                    <input name="county" />
-                                </label>
-                                <label class="field">
-                                    Contact person
-                                    <input name="contactPerson" />
-                                </label>
-                                <label class="field">
-                                    Phone
-                                    <input name="phone" type="tel" />
-                                </label>
-                                <label class="field">
-                                    Email
-                                    <input name="email" type="email" />
-                                </label>
-                                <div class="form-actions grid-span-two">
-                                    <button type="submit" class="btn btn-primary">Add facility</button>
-                                </div>
-                            </form>
-                        </div>
-                        `;
-
-                        document.getElementById('facilityForm').addEventListener('submit', async (event) => {
-                            event.preventDefault();
-                            const formData = new FormData(event.target);
-                            const payload = {
-                                name: formData.get('name'),
-                                county: formData.get('county'),
-                                contactPerson: formData.get('contactPerson'),
-                                phone: formData.get('phone'),
-                                email: formData.get('email'),
-                            };
-
-                            try {
-                                await DawaDB.addFacility(payload);
-                                event.target.reset();
-                                setStatus('Facility added.', 'success');
-                                await renderMain();
-                            } catch (error) {
-                                setStatus(error?.message || 'Unable to add the facility.', 'error');
-                            }
-                        });
-
-                        document.querySelectorAll('.remove-facility').forEach((button) => {
-                            button.addEventListener('click', async () => {
-                                try {
-                                    await DawaDB.removeFacility(button.dataset.id);
-                                    setStatus('Facility removed.', 'success');
-                                    await renderMain();
-                                } catch (error) {
-                                    setStatus(error?.message || 'Unable to remove the facility.', 'error');
-                                }
-                            });
-                        });
-                    }
-
-                    if (activeTab === 'medicine') {
-                        main.innerHTML = `
-                        <div class="section-header">
-                            <div>
-                                <h1>Medicine Listings</h1>
-                                <p class="small-note">Approve pending stock and manage active listings.</p>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <table class="wide-table">
-                                <thead>
-                                    <tr><th>Drug</th><th>Qty</th><th>Facility</th><th>Expiry</th><th>Status</th><th>Action</th></tr>
-                                </thead>
-                                <tbody>
-                                    ${data.medicines
-                                        .map((item) => {
-                                            const actions = item.approval === 'pending'
-                                                ? `<button class="btn btn-primary approve-listing" data-id="${item.id}">Approve</button> <button class="btn btn-outline reject-listing" data-id="${item.id}">Reject</button>`
-                                                : `<button class="btn btn-outline remove-listing" data-id="${item.id}">Remove</button>`;
-                                            return `
-                                                <tr>
-                                                    <td>${item.drug}</td>
-                                                    <td>${item.quantityLabel || `${Number(item.quantity).toLocaleString('en-KE')} ${item.unit || 'units'}`}</td>
-                                                    <td>${item.facility}</td>
-                                                    <td>${item.expiry}</td>
-                                                    <td><span class="badge ${item.approval === 'approved' ? 'approved' : item.approval === 'rejected' ? 'rejected' : 'pending'}">${item.approval === 'approved' ? 'Approved' : item.approval === 'rejected' ? 'Rejected' : 'Pending'}</span></td>
-                                                    <td>${actions}</td>
-                                                </tr>
-                                            `;
-                                        })
-                                        .join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="card">
-                            <h3>Add listing</h3>
-                            <form id="medicineForm" class="form-grid small">
-                                <label class="field">
-                                    Drug name
-                                    <input name="drug" required />
-                                </label>
-                                <label class="field">
-                                    Quantity
-                                    <input name="quantity" type="number" required />
-                                </label>
-                                <label class="field">
-                                    Facility
-                                    <input name="facility" required />
-                                </label>
-                                <label class="field">
-                                    Expiry
-                                    <input name="expiry" type="date" required />
-                                </label>
-                                <label class="field">
-                                    Status
-                                    <select name="status">
-                                        <option value="ready">Ready</option>
-                                        <option value="monitor">Monitor</option>
-                                    </select>
-                                </label>
-                                <div class="form-actions grid-span-two">
-                                    <button type="submit" class="btn btn-primary">Add approved listing</button>
-                                </div>
-                            </form>
-                        </div>
-                        `;
-
-                        document.getElementById('medicineForm').addEventListener('submit', async (event) => {
-                            event.preventDefault();
-                            const formData = new FormData(event.target);
-                            const payload = {
-                                drug: formData.get('drug'),
-                                quantity: formData.get('quantity'),
-                                facility: formData.get('facility'),
-                                expiry: formData.get('expiry'),
-                                status: formData.get('status'),
-                            };
-
-                            try {
-                                await DawaDB.adminAddMedicine(payload);
-                                event.target.reset();
-                                setStatus('Listing added.', 'success');
-                                await renderMain();
-                            } catch (error) {
-                                setStatus(error?.message || 'Unable to add the listing.', 'error');
-                            }
-                        });
-
-                        document.querySelectorAll('.approve-listing').forEach((button) => {
-                            button.addEventListener('click', async () => {
-                                try {
-                                    await DawaDB.approveMedicine(button.dataset.id);
-                                    setStatus('Listing approved.', 'success');
-                                    await renderMain();
-                                } catch (error) {
-                                    setStatus(error?.message || 'Unable to approve the listing.', 'error');
-                                }
-                            });
-                        });
-
-                        document.querySelectorAll('.reject-listing').forEach((button) => {
-                            button.addEventListener('click', async () => {
-                                try {
-                                    await DawaDB.rejectMedicine(button.dataset.id);
-                                    setStatus('Listing rejected.', 'success');
-                                    await renderMain();
-                                } catch (error) {
-                                    setStatus(error?.message || 'Unable to reject the listing.', 'error');
-                                }
-                            });
-                        });
-
-                        document.querySelectorAll('.remove-listing').forEach((button) => {
-                            button.addEventListener('click', async () => {
-                                try {
-                                    await DawaDB.removeMedicine(button.dataset.id);
-                                    setStatus('Listing removed.', 'success');
-                                    await renderMain();
-                                } catch (error) {
-                                    setStatus(error?.message || 'Unable to remove the listing.', 'error');
-                                }
-                            });
-                        });
-                    }
-
-                    if (activeTab === 'requests') {
-                        main.innerHTML = `
-                        <div class="section-header">
-                            <div>
-                                <h1>Transfer Requests</h1>
-                                <p class="small-note">Track all requests submitted from the home page.</p>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <table class="wide-table">
-                                <thead>
-                                    <tr><th>Drug</th><th>Requesting facility</th><th>Delivery location</th><th>Contact</th><th>Details</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
-                                </thead>
-                                <tbody>
-                                    ${data.transferRequests
-                                        .map((request) => {
-                                            const contact = `<a href="tel:${request.phone}">${request.phone}</a><br><a href="mailto:${request.email}">${request.email}</a>`;
-                                            const actions = request.status === 'resolved'
-                                                ? '<span class="small-note">Resolved</span>'
-                                                : `<button class="btn btn-primary contacted-request" data-id="${request.id}">Mark as contacted</button> <button class="btn btn-outline resolved-request" data-id="${request.id}">Mark as resolved</button>`;
-                                            return `
-                                                <tr>
-                                                    <td>${request.drug}</td>
-                                                    <td>${request.facility}</td>
-                                                    <td>${request.deliveryLocation}</td>
-                                                    <td>${contact}</td>
-                                                    <td>${request.details || '-'}</td>
-                                                    <td>${request.submittedAt ? new Date(request.submittedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
-                                                    <td><span class="badge ${request.status === 'new' ? 'new' : request.status === 'contacted' ? 'contacted' : 'resolved'}">${request.status}</span></td>
-                                                    <td>${actions}</td>
-                                                </tr>
-                                            `;
-                                        })
-                                        .join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                        `;
-
-                        document.querySelectorAll('.contacted-request').forEach((button) => {
-                            button.addEventListener('click', async () => {
-                                try {
-                                    await DawaDB.updateTransferRequestStatus(button.dataset.id, 'contacted');
-                                    setStatus('Request marked as contacted.', 'success');
-                                    await renderMain();
-                                } catch (error) {
-                                    setStatus(error?.message || 'Unable to update the request.', 'error');
-                                }
-                            });
-                        });
-
-                        document.querySelectorAll('.resolved-request').forEach((button) => {
-                            button.addEventListener('click', async () => {
-                                try {
-                                    await DawaDB.updateTransferRequestStatus(button.dataset.id, 'resolved');
-                                    setStatus('Request marked as resolved.', 'success');
-                                    await renderMain();
-                                } catch (error) {
-                                    setStatus(error?.message || 'Unable to update the request.', 'error');
-                                }
-                            });
-                        });
-                    }
-                } catch (error) {
-                    setStatus(error?.message || 'Unable to load the dashboard.', 'error');
-                    main.innerHTML = `
-                        <div class="section-header">
-                            <div>
-                                <h1>Dashboard unavailable</h1>
-                                <p class="small-note">The dashboard could not load its data. Please sign in again or check the Supabase configuration.</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-
-            document.getElementById('logoutButton').addEventListener('click', async () => {
-                try {
-                    await DawaDB.signOutAdmin();
-                } catch (error) {
-                    // Ignore sign-out errors and redirect anyway so the user can return to the login screen.
-                }
-                window.location.href = 'admin-login.html';
+    async function renderRequests() {
+      adminMain.replaceChildren();
+      const header = element('div', null, 'section-header');
+      header.append(element('h2', 'Transfer Requests'));
+      header.append(element('p', 'Track requester and supplier facilities, contact details and status.', 'small-note'));
+      adminMain.append(header);
+      const requests = await DawaDB.getTransferRequests();
+      const table = makeTable(['Medicine', 'Requester', 'Supplier', 'Delivery location', 'Contact', 'Details', 'Submitted', 'Status', 'Action']);
+      requests.forEach((request) => {
+        const row = document.createElement('tr');
+        appendCell(row, request.drug);
+        appendCell(row, request.facility);
+        appendCell(row, request.supplierFacility);
+        appendCell(row, request.deliveryLocation);
+        const contact = document.createElement('td');
+        const phone = element('a', request.phone);
+        phone.href = `tel:${request.phone}`;
+        const email = element('a', request.email);
+        email.href = `mailto:${request.email}`;
+        contact.append(phone, document.createElement('br'), email);
+        row.append(contact);
+        appendCell(row, request.details);
+        appendCell(row, request.submittedAt ? new Date(request.submittedAt).toLocaleString('en-GB') : '—');
+        const statusCell = document.createElement('td');
+        statusCell.append(badge(request.status));
+        row.append(statusCell);
+        const actionCell = document.createElement('td');
+        if (request.status === 'resolved') {
+          actionCell.append(element('span', 'Resolved', 'small-note'));
+        } else {
+          const actions = element('div', null, 'row-actions');
+          const addStatusButton = (label, status, className) => {
+            const button = element('button', label, className);
+            button.type = 'button';
+            button.addEventListener('click', async () => {
+              button.disabled = true;
+              try {
+                await DawaDB.updateTransferRequestStatus(request.id, status);
+                setStatus(`Request marked ${status}.`, 'success');
+                await renderMain();
+              } catch (error) {
+                setStatus(error.message || 'Unable to update the request.', 'error');
+                button.disabled = false;
+              }
             });
+            actions.append(button);
+          };
+          if (request.status === 'new') addStatusButton('Mark contacted', 'contacted', 'btn btn-primary');
+          addStatusButton('Mark resolved', 'resolved', 'btn btn-outline');
+          actionCell.append(actions);
+        }
+        row.append(actionCell);
+        table.body.append(row);
+      });
+      if (!requests.length) {
+        const row = document.createElement('tr');
+        const cell = element('td', 'No transfer requests have been submitted.', 'empty-state');
+        cell.colSpan = 9;
+        row.append(cell);
+        table.body.append(row);
+      }
+      const card = element('section', null, 'card');
+      card.append(table.wrapper);
+      adminMain.append(card);
+    }
 
-            const session = await DawaDB.getAdminSession();
-            if (!session) {
-                window.location.href = 'admin-login.html';
-                return;
-            }
+    async function renderMain() {
+      renderSidebar();
+      setStatus('');
+      try {
+        if (activeTab === 'overview') await renderOverview();
+        if (activeTab === 'verification') await renderVerification();
+        if (activeTab === 'medicine') await renderMedicines();
+        if (activeTab === 'requests') await renderRequests();
+      } catch (error) {
+        setStatus(error.message || 'Unable to load the admin dashboard.', 'error');
+        adminMain.replaceChildren(element('h2', 'Dashboard unavailable'));
+      }
+    }
 
-            renderMain();
-        })();
-    </script>
+    async function initializeAdminDashboard() {
+      try {
+        const session = await DawaDB.getSession();
+        if (!session) {
+          window.location.replace('admin-login.html');
+          return;
+        }
+        if (await DawaDB.getRole() !== 'admin') {
+          window.location.replace('admin-login.html');
+          return;
+        }
+        await renderMain();
+      } catch (error) {
+        setStatus(error.message || 'Unable to verify admin access.', 'error');
+      }
+    }
+
+    DawaDB.initializeNavigation();
+    initializeAdminDashboard();
+  </script>
 </body>
 
 </html>
